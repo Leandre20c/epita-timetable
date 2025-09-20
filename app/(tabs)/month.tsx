@@ -88,11 +88,11 @@ export default function MonthScreen() {
       {/* Navigation */}
       <View style={styles.navigationContainer}>
         <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
-          <Text style={styles.navButtonText}>← Précédent</Text>
+          <Text style={styles.navButtonText}>◄</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navButton} onPress={handleNext}>
-          <Text style={styles.navButtonText}>Prochain →</Text>
+          <Text style={styles.navButtonText}>►</Text>
         </TouchableOpacity>
       </View>
 
@@ -113,10 +113,12 @@ export default function MonthScreen() {
       >
         {!monthSchedule || getTotalEvents() === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📅</Text>
+            <Text style={styles.emptyIcon}>☀️</Text>
             <Text style={styles.emptyTitle}>Aucun cours</Text>
             <Text style={styles.emptySubtitle}>
-              {isCurrentMonth() ? 'Aucun cours prévu ce mois-ci' : 'Aucun cours prévu ce mois-là'}
+              {isCurrentMonth() ? "Aucun cours prévu ce mois-ci\n\n \
+                                    Donc soit c''est les vacaneces\n \
+                                    Soit c'est un bug :(" : 'Aucun cours prévu ce mois-là'}
             </Text>
           </View>
         ) : (

@@ -16,6 +16,12 @@ import { EventCard } from '../../components/EventCard';
 import { CalendarService } from '../../services/CalendarService';
 import { CalendarEvent } from '../../types/CalendarTypes';
 
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpFromDot
+} from 'lucide-react-native';
+
 export default function DayScreen() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -60,6 +66,10 @@ export default function DayScreen() {
     setCurrentDate(nextDay);
   };
 
+  const handleToday = () => {
+    setCurrentDate(new Date());
+  };
+
   const formatDayLabel = (): string => {
     try {
       const today = new Date();
@@ -90,6 +100,44 @@ export default function DayScreen() {
     }
   };
 
+  const totalDayHours = (): number => {
+  let totalMinutes = 0;
+  
+  for (let event of events) {
+    const start = event.startTime;
+    const end = event.endTime;
+    
+    // Calculer la différence en millisecondes puis convertir en minutes
+    const durationMs = end.getTime() - start.getTime();
+    const durationMinutes = Math.round(durationMs / (1000 * 60));
+    
+    totalMinutes += durationMinutes;
+  }
+  
+  return totalMinutes;
+};
+
+// Fonction pour formater les minutes en format lisible
+const formatTotalHours = (): string => {
+  const totalMinutes = totalDayHours();
+  
+  if (totalMinutes === 0) {
+    return 'Pas';
+  }
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  if (hours === 0) {
+    return `${minutes} ${minutes > 1 ? 'minutes' : 'minute'}`;
+  } else if (minutes === 0) {
+    return `${hours} ${hours > 1 ? 'heures' : 'heure'}`;
+  } else {
+    return `${hours} ${hours > 1 ? 'heures' : 'heure'} et ${minutes} ${minutes > 1 ? 'minutes' : 'minute'}`;
+  }
+};
+  
+
   const isToday = (): boolean => {
     return currentDate.toDateString() === new Date().toDateString();
   };
@@ -110,11 +158,20 @@ export default function DayScreen() {
       {/* Navigation */}
       <View style={styles.navigationContainer}>
         <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
-          <Text style={styles.navButtonText}>← Précédente</Text>
+          <ArrowLeft size={20} color="#495057" />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+        style={[
+          styles.todayButton, 
+          { backgroundColor: isToday() ? '#f8f9fa' : '#3498db' }
+        ]} 
+        onPress={handleToday}>
+          <ArrowUpFromDot size={20} color={isToday() ? '#808386ff' : '#ffffff'} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navButton} onPress={handleNext}>
-          <Text style={styles.navButtonText}>Prochaine →</Text>
+          <ArrowRight size={20} color="#495057" />
         </TouchableOpacity>
       </View>
 
@@ -124,7 +181,7 @@ export default function DayScreen() {
           {formatDayLabel()}
         </Text>
         <Text style={styles.eventCount}>
-          {events.length} cours{events.length > 1 ? '' : ''}
+          {formatTotalHours()} de cours
         </Text>
       </View>
 
@@ -135,10 +192,10 @@ export default function DayScreen() {
       >
         {events.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📅</Text>
+            <Text style={styles.emptyIcon}>☀️</Text>
             <Text style={styles.emptyTitle}>Aucun cours</Text>
             <Text style={styles.emptySubtitle}>
-              {isToday() ? 'Profitez de votre journée libre !' : 'Pas de cours prévu ce jour-là'}
+              {isToday() ? 'Profitez de votre journée libre !\nRecompile ton kernel :)' : 'Pas de cours prévu ce jour-là\nProfite en pour taffer fénéant'}
             </Text>
           </View>
         ) : (
@@ -190,6 +247,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#495057'
+  },
+  todayButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e9ecef'
+  },
+  todayButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff'
   },
   dayHeader: {
     paddingHorizontal: 16,

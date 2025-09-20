@@ -2,6 +2,8 @@
 import React from 'react';
 import { Text } from 'react-native';
 
+import { CalendarDays, CalendarFold, CalendarRange } from 'lucide-react-native';
+
 interface TabBarIconProps {
   name: string;
   color: string;
@@ -27,14 +29,14 @@ export default function TabBarIcon({ name, color }: TabBarIconProps) {
         
       // Icônes génériques
       case 'day':
-        return '📅';
+        return <CalendarFold size={20} color="#495057" />;
       case 'week':
-        return '📅';
+        return <CalendarDays size={20} color="#495057" />;
       case 'month':
-        return '📅';
+        return <CalendarRange size={20} color="#495057" />;
         
       default:
-        return '📱';
+        return <CalendarFold size={20} color="#495057" />;
     }
   };
 

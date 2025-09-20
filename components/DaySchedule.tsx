@@ -24,7 +24,7 @@ export const DaySchedule: React.FC<DayScheduleProps> = ({
   
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>📅</Text>
+      <Text style={styles.emptyIcon}>☀️</Text>
       <Text style={styles.emptyTitle}>Aucun cours aujourd'hui</Text>
       <Text style={styles.emptySubtitle}>
         {isToday ? 'Profitez de votre journée libre !' : 'Rien de prévu pour cette date'}

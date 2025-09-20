@@ -3,7 +3,7 @@ import { CalendarEvent, DaySchedule, MonthSchedule, WeekSchedule } from '../type
 import { ICSParser } from './ICSParser';
 
 export class CalendarService {
-  private static readonly ICS_URL = 'https://zeus.ionis-it.com/api/group/203/ics/q2GXJsFwfL';
+  private static readonly ICS_URL = 'https://zeus.ionis-it.com/api/group/203/ics/q2GXJsFwfL?startDate=2025-09-01';
   private static cachedEvents: CalendarEvent[] | null = null;
   private static lastFetch: number = 0;
   private static readonly CACHE_DURATION = 10 * 60 * 1000; // 10 minutes

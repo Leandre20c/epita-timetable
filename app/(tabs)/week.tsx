@@ -91,11 +91,11 @@ export default function WeekScreen() {
       {/* Navigation */}
       <View style={styles.navigationContainer}>
         <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
-          <Text style={styles.navButtonText}>← Précédente</Text>
+          <Text style={styles.navButtonText}>◄</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navButton} onPress={handleNext}>
-          <Text style={styles.navButtonText}>Prochaine →</Text>
+          <Text style={styles.navButtonText}>►</Text>
         </TouchableOpacity>
       </View>
 
@@ -116,10 +116,10 @@ export default function WeekScreen() {
       >
         {!weekSchedule || getTotalEvents() === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📅</Text>
+            <Text style={styles.emptyIcon}>☀️</Text>
             <Text style={styles.emptyTitle}>Aucun cours</Text>
             <Text style={styles.emptySubtitle}>
-              {isCurrentWeek() ? 'Aucun cours prévu cette semaine' : 'Aucun cours prévu cette semaine-là'}
+              {isCurrentWeek() ? 'Aucun cours prévu cette semaine\nVa trouver un travail au moins' : 'Aucun cours prévu cette semaine-là\nPrévois de réviser au moins'}
             </Text>
           </View>
         ) : (
