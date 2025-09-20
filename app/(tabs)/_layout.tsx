@@ -13,15 +13,22 @@ export default function TabLayout() {
           backgroundColor: '#ffffff',
           borderTopColor: '#e9ecef',
           borderTopWidth: 1,
+          paddingTop: 8,
+          paddingBottom: 8,
+          height: 70
         },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600'
+        }
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Emploi du temps',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'calendar' : 'calendar-outline'} color={color} />
+          title: 'Jour',
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="day" color={color} />
           ),
         }}
       />
@@ -29,8 +36,17 @@ export default function TabLayout() {
         name="week"
         options={{
           title: 'Semaine',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'grid' : 'grid-outline'} color={color} />
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="week" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="month"
+        options={{
+          title: 'Mois',
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="month" color={color} />
           ),
         }}
       />

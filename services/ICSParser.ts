@@ -1,5 +1,5 @@
 // services/ICSParser.ts
-import { CalendarEvent } from '../types/CalendarType';
+import { CalendarEvent } from '../types/CalendarTypes';
 
 export class ICSParser {
   public static parseICS(icsContent: string): CalendarEvent[] {

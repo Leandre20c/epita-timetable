@@ -7,26 +7,40 @@ interface TabBarIconProps {
   color: string;
 }
 
-// Dans TabBarIcon.tsx
-const TabBarIcon = ({ name, color }: TabBarIconProps) => {
+export default function TabBarIcon({ name, color }: TabBarIconProps) {
   const getEmoji = (iconName: string) => {
     switch (iconName) {
+      // Icônes pour la vue jour
       case 'calendar':
       case 'calendar-outline':
         return '📅';
+      
+      // Icônes pour la vue semaine
       case 'grid':
       case 'grid-outline':
         return '📋';
+      
+      // Icônes pour la vue mois
+      case 'calendar-month':
+      case 'calendar-month-outline':
+        return '🗓️';
+        
+      // Icônes génériques
+      case 'day':
+        return '📅';
+      case 'week':
+        return '📅';
+      case 'month':
+        return '📅';
+        
       default:
         return '📱';
     }
   };
 
   return (
-    <Text style={{ fontSize: 20, color }}>
+    <Text style={{ fontSize: 24, color }}>
       {getEmoji(name)}
     </Text>
   );
-};
-
-export default TabBarIcon;
+}

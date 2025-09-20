@@ -14,10 +14,17 @@ export interface DaySchedule {
   events: CalendarEvent[];
 }
 
-export type TabType = 'today' | 'next';
-
-export interface TabItem {
-  key: TabType;
-  label: string;
-  badge?: number;
+export interface WeekSchedule {
+  weekStart: Date;
+  weekEnd: Date;
+  days: DaySchedule[];
 }
+
+export interface MonthSchedule {
+  month: number; // 0-11
+  year: number;
+  weeks: WeekSchedule[];
+  events: CalendarEvent[];
+}
+
+export type ViewType = 'day' | 'week' | 'month';

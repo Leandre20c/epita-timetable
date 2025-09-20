@@ -1,5 +1,5 @@
 // services/CalendarService.ts
-import { CalendarEvent, DaySchedule } from '../types/CalendarType';
+import { CalendarEvent, DaySchedule, MonthSchedule, WeekSchedule } from '../types/CalendarTypes';
 import { ICSParser } from './ICSParser';
 
 export class CalendarService {
@@ -21,7 +21,7 @@ export class CalendarService {
       console.log('🔄 Chargement des événements depuis l\'API...');
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
       
       const response = await fetch(this.ICS_URL, {
         method: 'GET',
@@ -70,9 +70,11 @@ export class CalendarService {
     }
   }
 
+  // Méthode pour récupérer les événements d'un jour spécifique
   public static async getEventsForDate(date: Date): Promise<CalendarEvent[]> {
     try {
       const events = await this.fetchSchedule();
+      
       return events.filter(event => 
         ICSParser.isSameDay(event.startTime, date)
       );
@@ -82,31 +84,15 @@ export class CalendarService {
     }
   }
 
-  public static async getTodayEvents(): Promise<CalendarEvent[]> {
-    return this.getEventsForDate(new Date());
-  }
-
-  public static async getUpcomingEvents(days: number = 7): Promise<CalendarEvent[]> {
+  // Navigation par semaine
+  public static async getWeekSchedule(weekStartDate: Date): Promise<WeekSchedule> {
     try {
       const events = await this.fetchSchedule();
-      const now = new Date();
-      const futureDate = new Date();
-      futureDate.setDate(now.getDate() + days);
+      const weekStart = this.getWeekStart(weekStartDate);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
       
-      return events.filter(event => 
-        event.startTime >= now && event.startTime <= futureDate
-      );
-    } catch (error) {
-      console.error('Erreur getUpcomingEvents:', error);
-      return [];
-    }
-  }
-
-  public static async getEventsForWeek(startDate?: Date): Promise<DaySchedule[]> {
-    try {
-      const events = await this.fetchSchedule();
-      const weekStart = startDate || this.getWeekStart(new Date());
-      const weekSchedule: DaySchedule[] = [];
+      const days: DaySchedule[] = [];
       
       for (let i = 0; i < 7; i++) {
         const currentDate = new Date(weekStart);
@@ -116,26 +102,186 @@ export class CalendarService {
           ICSParser.isSameDay(event.startTime, currentDate)
         );
         
-        weekSchedule.push({
+        days.push({
           date: currentDate.toISOString().split('T')[0],
           events: dayEvents
         });
       }
       
-      return weekSchedule;
+      return {
+        weekStart,
+        weekEnd,
+        days
+      };
     } catch (error) {
-      console.error('Erreur getEventsForWeek:', error);
-      return [];
+      console.error('Erreur getWeekSchedule:', error);
+      const weekStart = this.getWeekStart(weekStartDate);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      
+      return {
+        weekStart,
+        weekEnd,
+        days: Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(weekStart);
+          date.setDate(weekStart.getDate() + i);
+          return {
+            date: date.toISOString().split('T')[0],
+            events: []
+          };
+        })
+      };
     }
   }
 
+  // Navigation par mois
+  public static async getMonthSchedule(monthDate: Date): Promise<MonthSchedule> {
+    try {
+      const events = await this.fetchSchedule();
+      const year = monthDate.getFullYear();
+      const month = monthDate.getMonth();
+      
+      // Premier jour du mois
+      const monthStart = new Date(year, month, 1);
+      // Dernier jour du mois
+      const monthEnd = new Date(year, month + 1, 0);
+      
+      // Événements du mois
+      const monthEvents = events.filter(event => {
+        const eventDate = event.startTime;
+        return eventDate.getFullYear() === year && eventDate.getMonth() === month;
+      });
+      
+      // Générer les semaines du mois
+      const weeks: WeekSchedule[] = [];
+      const firstWeekStart = this.getWeekStart(monthStart);
+      
+      let currentWeekStart = new Date(firstWeekStart);
+      
+      while (currentWeekStart <= monthEnd) {
+        const weekSchedule = await this.getWeekSchedule(currentWeekStart);
+        
+        // Ne garder que si la semaine touche le mois courant
+        const weekTouchesMonth = weekSchedule.days.some(day => {
+          const dayDate = new Date(day.date + 'T00:00:00');
+          return dayDate.getMonth() === month && dayDate.getFullYear() === year;
+        });
+        
+        if (weekTouchesMonth) {
+          weeks.push(weekSchedule);
+        }
+        
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      }
+      
+      return {
+        month,
+        year,
+        weeks,
+        events: monthEvents
+      };
+    } catch (error) {
+      console.error('Erreur getMonthSchedule:', error);
+      return {
+        month: monthDate.getMonth(),
+        year: monthDate.getFullYear(),
+        weeks: [],
+        events: []
+      };
+    }
+  }
+
+  // Utilitaires de navigation
   public static getWeekStart(date: Date): Date {
     const weekStart = new Date(date);
     const dayOfWeek = weekStart.getDay();
-    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Monday as first day
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Lundi comme premier jour
     weekStart.setDate(weekStart.getDate() + diff);
     weekStart.setHours(0, 0, 0, 0);
     return weekStart;
+  }
+
+  public static getPreviousWeek(currentWeekStart: Date): Date {
+    const previousWeek = new Date(currentWeekStart);
+    previousWeek.setDate(currentWeekStart.getDate() - 7);
+    return previousWeek;
+  }
+
+  public static getNextWeek(currentWeekStart: Date): Date {
+    const nextWeek = new Date(currentWeekStart);
+    nextWeek.setDate(currentWeekStart.getDate() + 7);
+    return nextWeek;
+  }
+
+  public static getPreviousMonth(currentDate: Date): Date {
+    const previousMonth = new Date(currentDate);
+    previousMonth.setMonth(currentDate.getMonth() - 1);
+    return previousMonth;
+  }
+
+  public static getNextMonth(currentDate: Date): Date {
+    const nextMonth = new Date(currentDate);
+    nextMonth.setMonth(currentDate.getMonth() + 1);
+    return nextMonth;
+  }
+
+  // Formatage des périodes
+  public static formatWeekPeriod(weekStart: Date, weekEnd: Date): string {
+    try {
+      const startStr = weekStart.toLocaleDateString('fr-FR', { 
+        day: 'numeric', 
+        month: 'short' 
+      });
+      const endStr = weekEnd.toLocaleDateString('fr-FR', { 
+        day: 'numeric', 
+        month: 'short',
+        year: 'numeric'
+      });
+      
+      if (weekStart.getMonth() === weekEnd.getMonth()) {
+        return `${weekStart.getDate()}-${endStr}`;
+      } else {
+        return `${startStr} - ${endStr}`;
+      }
+    } catch (error) {
+      return 'Semaine';
+    }
+  }
+
+  public static formatMonthPeriod(date: Date): string {
+    try {
+      return date.toLocaleDateString('fr-FR', { 
+        month: 'long', 
+        year: 'numeric' 
+      });
+    } catch (error) {
+      return 'Mois';
+    }
+  }
+
+  // Limitations de navigation (optionnel)
+  public static canNavigateToPreviousWeek(currentWeekStart: Date): boolean {
+    const minDate = new Date();
+    minDate.setFullYear(minDate.getFullYear() - 1); // 1 an en arrière max
+    return currentWeekStart > minDate;
+  }
+
+  public static canNavigateToNextWeek(currentWeekStart: Date): boolean {
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() + 1); // 1 an en avant max
+    return currentWeekStart < maxDate;
+  }
+
+  public static canNavigateToPreviousMonth(currentDate: Date): boolean {
+    const minDate = new Date();
+    minDate.setFullYear(minDate.getFullYear() - 1);
+    return currentDate > minDate;
+  }
+
+  public static canNavigateToNextMonth(currentDate: Date): boolean {
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() + 1);
+    return currentDate < maxDate;
   }
 
   public static clearCache(): void {

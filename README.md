@@ -1,50 +1,208 @@
-# Welcome to your Expo app 👋
+# 📅 Mon Emploi du Temps - Ionis IT
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Une application mobile React Native développée avec Expo pour consulter votre emploi du temps Ionis-IT en temps réel.
 
-## Get started
+## 🎯 Fonctionnalités
 
-1. Install dependencies
+- ✅ **Synchronisation automatique** avec l'API Ionis-IT
+- ✅ **Interface mobile native** optimisée iOS/Android
+- ✅ **Rafraîchissement automatique** toutes les 5 minutes
+- ✅ **Navigation par date** intuitive
+- ✅ **Code couleur par matière** pour une meilleure lisibilité
+- ✅ **Informations détaillées** : horaires, salles, descriptions
+- ✅ **Mode hors ligne** avec cache intelligent
+- ✅ **Indicateurs de statut** : cours en cours, à venir, terminé
 
-   ```bash
-   npm install
-   ```
+## 🚀 Installation rapide
 
-2. Start the app
+### Prérequis
+- Node.js (v16 ou plus récent)
+- npm ou yarn
+- Expo CLI
+- Expo Go app sur votre téléphone
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+### 1. Créer le projet
 ```bash
-npm run reset-project
+npx create-expo-app mon-emploi-du-temps
+cd mon-emploi-du-temps
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Installer les dépendances
+```bash
+npm install @expo/vector-icons
+```
 
-## Learn more
+### 3. Copier les fichiers
+Copiez tous les fichiers fournis dans la structure suivante :
 
-To learn more about developing your project with Expo, look at the following resources:
+```
+mon-emploi-du-temps/
+├── App.js
+├── package.json
+├── app.json
+├── src/
+│   ├── components/
+│   │   ├── Header.js
+│   │   ├── DateNavigator.js
+│   │   ├── EventCard.js
+│   │   ├── EmptyState.js
+│   │   ├── LoadingScreen.js
+│   │   ├── QuickNavigation.js
+│   │   └── UpdateInfo.js
+│   ├── screens/
+│   │   └── ScheduleScreen.js
+│   ├── services/
+│   │   └── ScheduleService.js
+│   ├── utils/
+│   │   ├── dateUtils.js
+│   │   ├── colorUtils.js
+│   │   └── icsParser.js
+│   ├── styles/
+│   │   └── globalStyles.js
+│   └── constants/
+│       └── config.js
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 4. Lancer l'application
+```bash
+npx expo start
+```
 
-## Join the community
+### 5. Tester sur votre téléphone
+1. Téléchargez **Expo Go** depuis l'App Store/Play Store
+2. Scannez le QR code affiché dans le terminal
+3. L'app se lance automatiquement !
 
-Join our community of developers creating universal apps.
+## 📱 Utilisation
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Navigation
+- **Flèches gauche/droite** : Naviguer entre les jours
+- **Bouton "Aujourd'hui"** : Retour rapide à la date actuelle
+- **Pull-to-refresh** : Actualiser manuellement
+
+### Codes couleur des matières
+- 🔵 **Physique** : Bleu
+- 🟣 **Mathématiques** : Violet
+- 🟢 **Algorithmique** : Vert
+- 🟠 **Programmation** : Orange
+- 🟡 **Méthodologie** : Jaune
+- 🔴 **Examens** : Rouge
+- 🩵 **Anglais** : Rose
+- ⚫ **Événements spéciaux** : Gris foncé
+
+### Indicateurs de statut
+- ⏰ **Cours à venir** : Icône horloge
+- ▶️ **Cours en cours** : Icône play vert
+- ✅ **Cours terminé** : Icône check gris
+
+## 🔧 Configuration
+
+### Personnaliser l'URL ICS
+Modifiez l'URL dans `src/constants/config.js` :
+```javascript
+export const API_CONFIG = {
+  ICS_URL: 'https://zeus.ionis-it.com/api/group/VOTRE_GROUPE/ics/VOTRE_TOKEN',
+  // ...
+};
+```
+
+### Modifier les couleurs
+Personnalisez les couleurs dans `src/utils/colorUtils.js` :
+```javascript
+export const SUBJECT_COLORS = {
+  'votre_matiere': {
+    primary: '#VOTRE_COULEUR',
+    light: '#VOTRE_COULEUR_CLAIRE',
+    dark: '#VOTRE_COULEUR_FONCEE'
+  },
+  // ...
+};
+```
+
+## 🏗️ Architecture du projet
+
+### Structure modulaire
+- **components/** : Composants React réutilisables
+- **screens/** : Écrans de l'application
+- **services/** : Logique métier et appels API
+- **utils/** : Fonctions utilitaires
+- **styles/** : Styles globaux
+- **constants/** : Configuration et constantes
+
+### Gestion des données
+- **ScheduleService** : Gestion des appels API avec cache
+- **ICSParser** : Parseur ICS robuste avec gestion d'erreurs
+- **Cache intelligent** : Évite les requêtes inutiles
+
+### Gestion des erreurs
+- Messages d'erreur contextuels
+- Fallbacks pour données corrompues
+- Retry automatique en cas d'échec réseau
+
+## 📦 Déploiement
+
+### Build de production
+```bash
+# Android
+npx expo build:android
+
+# iOS (nécessite compte développeur Apple)
+npx expo build:ios
+
+# Ou avec EAS Build (recommandé)
+npm install -g @expo/eas-cli
+eas build --platform android
+```
+
+### Publication sur les stores
+```bash
+# Android Play Store
+eas submit --platform android
+
+# iOS App Store
+eas submit --platform ios
+```
+
+## 🛠️ Développement
+
+### Scripts disponibles
+```bash
+npm start          # Lancer le serveur de développement
+npm run android    # Lancer sur émulateur Android
+npm run ios        # Lancer sur simulateur iOS
+npm run web        # Lancer en mode web
+npm run tunnel     # Mode tunnel pour tests à distance
+```
+
+### Debug
+- Les logs sont disponibles dans la console Expo
+- Utilisez Flipper pour le debug avancé
+- React Developer Tools pour l'inspection des composants
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créez une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Commit vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
+
+## 📄 Licence
+
+Ce projet est sous licence MIT.
+
+## 🐛 Signaler un bug
+
+Ouvrez une issue sur GitHub avec :
+- Description détaillée du problème
+- Étapes pour reproduire
+- Screenshots si applicable
+- Version de l'app et du système
+
+## 📞 Support
+
+- 📧 Email : votre-email@example.com
+- 💬 Discord : Votre#Discord
+- 🐦 Twitter : @VotreTwitter
+
+---

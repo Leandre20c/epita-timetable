@@ -2,7 +2,7 @@
 import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ICSParser } from '../services/ICSParser';
-import { CalendarEvent } from '../types/CalendarType';
+import { CalendarEvent } from '../types/CalendarTypes';
 import { EventCard } from './EventCard';
 
 interface DayScheduleProps {

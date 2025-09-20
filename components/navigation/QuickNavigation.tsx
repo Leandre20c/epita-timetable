@@ -115,4 +115,4 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
     textTransform: 'capitalize'
   }
-});
+}); 
