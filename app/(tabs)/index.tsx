@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EventCard } from '../../components/EventCard';
 import { CalendarService } from '../../services/CalendarService';
 import { ICSParser } from '../../services/ICSParser';
-import { CalendarEvent, TabType } from '../../types/CalendarTypes';
+import { CalendarEvent, TabType } from '../../types/CalendarType';
 
 export default function ScheduleScreen() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -55,6 +55,7 @@ export default function ScheduleScreen() {
           { text: 'Annuler', style: 'cancel' }
         ]
       );
+      setEvents([]); // Reset events on error
     } finally {
       setIsLoading(false);
     }
@@ -140,7 +141,10 @@ export default function ScheduleScreen() {
               <Text style={styles.emptyIcon}>📅</Text>
               <Text style={styles.emptyTitle}>Aucun cours</Text>
               <Text style={styles.emptySubtitle}>
-                {selectedTab === 'today' ? 'Profitez de votre journée libre !' : 'Aucun cours à venir'}
+                {selectedTab === 'today' 
+                  ? 'Profitez de votre journée libre !' 
+                  : 'Aucun cours à venir'
+                }
               </Text>
             </View>
           ) : (
@@ -159,30 +163,79 @@ export default function ScheduleScreen() {
   );
 }
 
-// Styles identiques à la version précédente
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f9fa' },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { marginTop: 16, fontSize: 16, color: '#7f8c8d' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 16, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e9ecef' },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 16, 
+    paddingVertical: 16, 
+    backgroundColor: '#ffffff', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#e9ecef' 
+  },
   title: { fontSize: 24, fontWeight: 'bold', color: '#2c3e50' },
   refreshButton: { padding: 8 },
   refreshText: { fontSize: 18 },
-  tabContainer: { flexDirection: 'row', backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e9ecef' },
-  tab: { flex: 1, paddingVertical: 16, paddingHorizontal: 8, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
+  tabContainer: { 
+    flexDirection: 'row', 
+    backgroundColor: '#ffffff', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#e9ecef' 
+  },
+  tab: { 
+    flex: 1, 
+    paddingVertical: 16, 
+    paddingHorizontal: 8, 
+    alignItems: 'center', 
+    flexDirection: 'row', 
+    justifyContent: 'center' 
+  },
   activeTab: { borderBottomWidth: 3, borderBottomColor: '#3498db' },
   tabText: { fontSize: 14, fontWeight: '600', color: '#7f8c8d' },
   activeTabText: { color: '#3498db' },
-  badge: { backgroundColor: '#e74c3c', borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
+  badge: { 
+    backgroundColor: '#e74c3c', 
+    borderRadius: 10, 
+    minWidth: 20, 
+    height: 20, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginLeft: 8 
+  },
   badgeText: { color: '#ffffff', fontSize: 12, fontWeight: 'bold' },
   content: { flex: 1 },
   dateHeader: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#ffffff' },
-  dateText: { fontSize: 18, fontWeight: '600', color: '#2c3e50', textTransform: 'capitalize' },
+  dateText: { 
+    fontSize: 18, 
+    fontWeight: '600', 
+    color: '#2c3e50', 
+    textTransform: 'capitalize' 
+  },
   scrollView: { flex: 1 },
   eventsContainer: { padding: 16 },
   statsText: { fontSize: 14, color: '#7f8c8d', marginBottom: 16, textAlign: 'center' },
-  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 80, paddingHorizontal: 32 },
+  emptyContainer: { 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    paddingVertical: 80, 
+    paddingHorizontal: 32 
+  },
   emptyIcon: { fontSize: 64, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#2c3e50', marginBottom: 8, textAlign: 'center' },
-  emptySubtitle: { fontSize: 14, color: '#7f8c8d', textAlign: 'center', lineHeight: 20 }
+  emptyTitle: { 
+    fontSize: 18, 
+    fontWeight: '600', 
+    color: '#2c3e50', 
+    marginBottom: 8, 
+    textAlign: 'center' 
+  },
+  emptySubtitle: { 
+    fontSize: 14, 
+    color: '#7f8c8d', 
+    textAlign: 'center', 
+    lineHeight: 20 
+  }
 });
