@@ -1,6 +1,6 @@
-# 📅 Mon Emploi du Temps - Ionis IT
+# 📅 App emploi du temps EPITA
 
-Une application mobile React Native développée avec Expo pour consulter votre emploi du temps Ionis-IT en temps réel.
+Une application mobile React Native développée avec Expo pour consulter votre emploi du temps Epita à tout moment.
 
 ## 🎯 Fonctionnalités
 
@@ -12,6 +12,9 @@ Une application mobile React Native développée avec Expo pour consulter votre 
 - ✅ **Informations détaillées** : horaires, salles, descriptions
 - ✅ **Mode hors ligne** avec cache intelligent
 - ✅ **Indicateurs de statut** : cours en cours, à venir, terminé
+
+- Seulement pour Rennes SPE groupe A
+
 
 ## 🚀 Installation rapide
 
