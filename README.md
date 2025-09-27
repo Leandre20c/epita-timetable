@@ -1,211 +1,180 @@
-    # 📅 App emploi du temps EPITA
+# EPITA Timetable
 
-Une application mobile React Native développée avec Expo pour consulter votre emploi du temps Epita à tout moment.
+Application mobile pour consulter l'emploi du temps EPITA de manière intuitive et moderne.
 
-## 🎯 Fonctionnalités
+## 📱 Aperçu
 
-- ✅ **Synchronisation automatique** avec l'API Ionis-IT
-- ✅ **Interface mobile native** optimisée iOS/Android
-- ✅ **Rafraîchissement automatique** toutes les 5 minutes
-- ✅ **Navigation par date** intuitive
-- ✅ **Code couleur par matière** pour une meilleure lisibilité
-- ✅ **Informations détaillées** : horaires, salles, descriptions
-- ✅ **Mode hors ligne** avec cache intelligent
-- ✅ **Indicateurs de statut** : cours en cours, à venir, terminé
+EPITA Timetable permet aux étudiants d'EPITA de :
+- Consulter leur emploi du temps en temps réel
+- Naviguer par jour, semaine ou mois
+- Recevoir des notifications en cas de changements
+- Accéder à leurs cours même hors ligne (cache)
 
-- Seulement pour Rennes SPE groupe A
+### Captures d'écran
+
+v1
+
+<img width="265" height="600" alt="image" src="https://github.com/user-attachments/assets/a9d9daaf-b037-498f-96f5-adf3295c25ab" />
 
 
-## 🚀 Installation rapide
+## 🚀 Installation
 
-### Prérequis
-- Node.js (v16 ou plus récent)
-- npm ou yarn
-- Expo CLI
-- Expo Go app sur votre téléphone
+### Pour les utilisateurs
 
-### 1. Créer le projet
+#### Android
+1. **Installation directe (Recommandée)**
+   - Ouvrez ce lien sur votre téléphone : [Télécharger EPITA Timetable](https://expo.dev/accounts/leandre20c/projects/epita-timetable/builds/4ce00e16-1f2b-47f5-b91c-86000387b29b)
+   - Téléchargez le fichier APK
+   - Autorisez l'installation depuis "Sources inconnues" dans vos paramètres
+   - Installez l'application
+
+2. **Via QR Code**
+   - Scannez le QR Code disponible dans les [Releases](../../releases)
+
+#### iOS
+*Version iOS en développement*
+
+### Configuration requise
+- Android 5.0+ (API niveau 21)
+- Connexion internet pour la synchronisation
+- 50 MB d'espace libre
+
+## 📖 Guide d'utilisation
+
+### Première utilisation
+1. Lancez l'application
+2. L'emploi du temps se synchronise automatiquement
+3. Naviguez entre les différentes vues (jour/semaine/mois)
+
+### Fonctionnalités principales
+
+#### Navigation
+- **Vue jour** : Planning détaillé de la journée
+- **Vue semaine** : Vue d'ensemble hebdomadaire
+- **Vue mois** : Calendrier mensuel avec événements
+
+#### Notifications [bêta]
+- Activation automatique des notifications de changements
+- Alertes en cas de cours annulés ou déplacés
+- Rappels avant les cours
+
+#### Mode hors ligne
+- Cache automatique des données
+- Consultation possible sans connexion
+- Synchronisation lors de la reconnexion
+
+## 🛠️ Pour les développeurs
+
+### Stack technique
+- **Framework** : React Native 0.81.4 avec Expo SDK 54
+- **Navigation** : Expo Router 6.0.7
+- **UI** : React Native avec composants natifs
+- **État** : React Hooks + Context API
+- **Build** : EAS Build
+- **Languages** : TypeScript
+
+### Installation du projet
+
 ```bash
-npx create-expo-app mon-emploi-du-temps
-cd mon-emploi-du-temps
-```
+# Cloner le repository
+git clone https://github.com/votre-username/epita-timetable.git
+cd epita-timetable
 
-### 2. Installer les dépendances
-```bash
-npm install @expo/vector-icons
-```
+# Installer les dépendances
+npm install
 
-### 3. Copier les fichiers
-Copiez tous les fichiers fournis dans la structure suivante :
-
-```
-mon-emploi-du-temps/
-├── App.js
-├── package.json
-├── app.json
-├── src/
-│   ├── components/
-│   │   ├── Header.js
-│   │   ├── DateNavigator.js
-│   │   ├── EventCard.js
-│   │   ├── EmptyState.js
-│   │   ├── LoadingScreen.js
-│   │   ├── QuickNavigation.js
-│   │   └── UpdateInfo.js
-│   ├── screens/
-│   │   └── ScheduleScreen.js
-│   ├── services/
-│   │   └── ScheduleService.js
-│   ├── utils/
-│   │   ├── dateUtils.js
-│   │   ├── colorUtils.js
-│   │   └── icsParser.js
-│   ├── styles/
-│   │   └── globalStyles.js
-│   └── constants/
-│       └── config.js
-```
-
-### 4. Lancer l'application
-```bash
+# Lancer en développement
 npx expo start
 ```
 
-### 5. Tester sur votre téléphone
-1. Téléchargez **Expo Go** depuis l'App Store/Play Store
-2. Scannez le QR code affiché dans le terminal
-3. L'app se lance automatiquement !
+### Contribuer
 
-## 📱 Utilisation
-
-### Navigation
-- **Flèches gauche/droite** : Naviguer entre les jours
-- **Bouton "Aujourd'hui"** : Retour rapide à la date actuelle
-- **Pull-to-refresh** : Actualiser manuellement
-
-### Codes couleur des matières
-- 🔵 **Physique** : Bleu
-- 🟣 **Mathématiques** : Violet
-- 🟢 **Algorithmique** : Vert
-- 🟠 **Programmation** : Orange
-- 🟡 **Méthodologie** : Jaune
-- 🔴 **Examens** : Rouge
-- 🩵 **Anglais** : Rose
-- ⚫ **Événements spéciaux** : Gris foncé
-
-### Indicateurs de statut
-- ⏰ **Cours à venir** : Icône horloge
-- ▶️ **Cours en cours** : Icône play vert
-- ✅ **Cours terminé** : Icône check gris
-
-## 🔧 Configuration
-
-### Personnaliser l'URL ICS
-Modifiez l'URL dans `src/constants/config.js` :
-```javascript
-export const API_CONFIG = {
-  ICS_URL: 'https://zeus.ionis-it.com/api/group/VOTRE_GROUPE/ics/VOTRE_TOKEN',
-  // ...
-};
-```
-
-### Modifier les couleurs
-Personnalisez les couleurs dans `src/utils/colorUtils.js` :
-```javascript
-export const SUBJECT_COLORS = {
-  'votre_matiere': {
-    primary: '#VOTRE_COULEUR',
-    light: '#VOTRE_COULEUR_CLAIRE',
-    dark: '#VOTRE_COULEUR_FONCEE'
-  },
-  // ...
-};
-```
-
-## 🏗️ Architecture du projet
-
-### Structure modulaire
-- **components/** : Composants React réutilisables
-- **screens/** : Écrans de l'application
-- **services/** : Logique métier et appels API
-- **utils/** : Fonctions utilitaires
-- **styles/** : Styles globaux
-- **constants/** : Configuration et constantes
-
-### Gestion des données
-- **ScheduleService** : Gestion des appels API avec cache
-- **ICSParser** : Parseur ICS robuste avec gestion d'erreurs
-- **Cache intelligent** : Évite les requêtes inutiles
-
-### Gestion des erreurs
-- Messages d'erreur contextuels
-- Fallbacks pour données corrompues
-- Retry automatique en cas d'échec réseau
-
-## 📦 Déploiement
-
-### Build de production
-```bash
-# Android
-npx expo build:android
-
-# iOS (nécessite compte développeur Apple)
-npx expo build:ios
-
-# Ou avec EAS Build (recommandé)
-npm install -g @expo/eas-cli
-eas build --platform android
-```
-
-### Publication sur les stores
-```bash
-# Android Play Store
-eas submit --platform android
-
-# iOS App Store
-eas submit --platform ios
-```
-
-## 🛠️ Développement
-
-### Scripts disponibles
-```bash
-npm start          # Lancer le serveur de développement
-npm run android    # Lancer sur émulateur Android
-npm run ios        # Lancer sur simulateur iOS
-npm run web        # Lancer en mode web
-npm run tunnel     # Mode tunnel pour tests à distance
-```
-
-### Debug
-- Les logs sont disponibles dans la console Expo
-- Utilisez Flipper pour le debug avancé
-- React Developer Tools pour l'inspection des composants
-
-## 🤝 Contribution
-
-1. Fork le projet
-2. Créez une branche feature (`git checkout -b feature/AmazingFeature`)
-3. Commit vos changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
+1. Forkez le projet
+2. Créez une branche feature (`git checkout -b feature/nouvelle-fonctionnalite`)
+3. Committez vos changements (`git commit -m 'Ajout nouvelle fonctionnalité'`)
+4. Pushez vers la branche (`git push origin feature/nouvelle-fonctionnalite`)
 5. Ouvrez une Pull Request
 
-## 📄 Licence
+## 📋 Changelog
 
-Ce projet est sous licence MIT.
+### Version 1.0.0 (Actuelle)
+- ✅ Synchronisation emploi du temps EPITA
+- ✅ Navigation jour/semaine/mois
+- ✅ Notifications de changements
+- ✅ Mode hors ligne
+- ✅ Interface moderne et intuitive
+
+### Prochaines versions
+- 🔄 Version iOS
+- 🔄 Widget Android
+- 🔄 Intégration calendrier système
+- 🔄 Partage de cours
+- 🔄 Mode sombre
+- 🔄 Visualisation par Mois plus claire
+- 🔄 Couleurs par cours
+- 🔄 Examens mis en evidences
+- 🔄 Gestion de notifications
+- 🔄 Changer de nom d'app
+- 🔄 Identitée claire et renforcée (UI, UX, Logos)
 
 ## 🐛 Signaler un bug
 
-Ouvrez une issue sur GitHub avec :
-- Description détaillée du problème
-- Étapes pour reproduire
-- Screenshots si applicable
-- Version de l'app et du système
+Si vous rencontrez un problème :
+
+1. **Vérifiez** que vous avez la dernière version
+2. **Consultez** les [Issues existantes](../../issues)
+3. **Créez un nouveau ticket** si nécessaire avec :
+   - Description du problème
+   - Étapes pour reproduire
+   - Version Android
+   - Captures d'écran si pertinentes
+
+### Template de bug report
+
+```markdown
+**Description**
+Description claire du problème
+
+**Reproduction**
+1. Aller à '...'
+2. Cliquer sur '...'
+3. Faire défiler jusqu'à '...'
+4. Voir l'erreur
+
+**Comportement attendu**
+Ce qui devrait se passer
+
+**Captures d'écran**
+Si applicable
+
+**Environnement:**
+- Appareil : [Samsung Galaxy S21]
+- Version Android : [12]
+- Version app : [1.0.0]
+```
+
+## 💡 Demandes de fonctionnalités
+
+Pour proposer une nouvelle fonctionnalité :
+
+1. Vérifiez qu'elle n'existe pas déjà dans les [Issues](../../issues)
+2. Créez un ticket avec le label `enhancement`
+3. Décrivez clairement le besoin et l'usage
 
 ## 📞 Support
 
-- 📧 Email : votre-email@example.com
-- 💬 Discord : Votre#Discord
-- 🐦 Twitter : @VotreTwitter
+- **Issues GitHub** : Pour bugs et fonctionnalités
+- **Email** : @leandre.vincent@epita.fr
+
+## 📄 Licence
+
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+## 🙏 Remerciements
+
+- Claude par anthropic
+- Bêta testeurs étudiants EPITA
 
 ---
+
+**Par un étudiant d'Epita**
