@@ -34,7 +34,7 @@ interface EventChange {
 export class NotificationService {
   private static lastKnownEvents: CalendarEvent[] = [];
   private static isInitialized = false;
-  private static monitoringInterval: NodeJS.Timeout | null = null;
+  private static monitoringInterval: number | null = null;
   private static isExpoGo = false;
 
   // Vérifie si on est dans Expo Go

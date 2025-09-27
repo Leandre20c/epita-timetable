@@ -84,6 +84,56 @@ export class CalendarService {
     }
   }
 
+  // Méthode pour récupérer les événements d'aujourd'hui
+  public static async getTodayEvents(): Promise<CalendarEvent[]> {
+    return this.getEventsForDate(new Date());
+  }
+
+  // Méthode pour récupérer les événements à venir
+  public static async getUpcomingEvents(days: number = 7): Promise<CalendarEvent[]> {
+    try {
+      const events = await this.fetchSchedule();
+      const now = new Date();
+      const futureDate = new Date();
+      futureDate.setDate(now.getDate() + days);
+      
+      return events.filter(event => 
+        event.startTime >= now && event.startTime <= futureDate
+      );
+    } catch (error) {
+      console.error('Erreur getUpcomingEvents:', error);
+      return [];
+    }
+  }
+
+  // Méthode pour récupérer une semaine d'événements
+  public static async getEventsForWeek(startDate?: Date): Promise<DaySchedule[]> {
+    try {
+      const events = await this.fetchSchedule();
+      const weekStart = startDate || this.getWeekStart(new Date());
+      const weekSchedule: DaySchedule[] = [];
+      
+      for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(weekStart);
+        currentDate.setDate(weekStart.getDate() + i);
+        
+        const dayEvents = events.filter(event => 
+          ICSParser.isSameDay(event.startTime, currentDate)
+        );
+        
+        weekSchedule.push({
+          date: currentDate.toISOString().split('T')[0],
+          events: dayEvents
+        });
+      }
+      
+      return weekSchedule;
+    } catch (error) {
+      console.error('Erreur getEventsForWeek:', error);
+      return [];
+    }
+  }
+
   // Navigation par semaine
   public static async getWeekSchedule(weekStartDate: Date): Promise<WeekSchedule> {
     try {
