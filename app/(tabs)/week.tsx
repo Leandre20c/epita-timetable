@@ -1,14 +1,14 @@
 // app/(tabs)/week.tsx
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -102,7 +102,7 @@ export default function WeekScreen() {
       {/* En-tête de la semaine */}
       <View style={[styles.weekHeader, isCurrentWeek() && styles.currentWeekHeader]}>
         <Text style={[styles.weekTitle, isCurrentWeek() && styles.currentWeekTitle]}>
-          {getCurrentWeekLabel()}
+          {getCurrentWeekLabel()} 
         </Text>
         <Text style={styles.eventCount}>
           {getTotalEvents()} cours{getTotalEvents() > 1 ? '' : ''}

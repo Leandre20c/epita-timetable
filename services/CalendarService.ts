@@ -121,8 +121,11 @@ export class CalendarService {
           ICSParser.isSameDay(event.startTime, currentDate)
         );
         
+        // FIX: Éviter les problèmes de timezone en formatant manuellement
+        const dateString = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+        
         weekSchedule.push({
-          date: currentDate.toISOString().split('T')[0],
+          date: dateString,
           events: dayEvents
         });
       }
@@ -243,13 +246,13 @@ export class CalendarService {
 
   // Utilitaires de navigation
   public static getWeekStart(date: Date): Date {
-    const weekStart = new Date(date);
-    const dayOfWeek = weekStart.getDay();
-    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Lundi comme premier jour
-    weekStart.setDate(weekStart.getDate() + diff);
-    weekStart.setHours(0, 0, 0, 0);
-    return weekStart;
-  }
+  const weekStart = new Date(date);
+  const dayOfWeek = weekStart.getDay();
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Lundi comme premier jour
+  weekStart.setDate(weekStart.getDate() + diff);
+  weekStart.setHours(0, 0, 0, 0);
+  return weekStart;
+}
 
   public static getPreviousWeek(currentWeekStart: Date): Date {
     const previousWeek = new Date(currentWeekStart);
