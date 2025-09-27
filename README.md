@@ -1,4 +1,4 @@
-# 📅 App emploi du temps EPITA
+    # 📅 App emploi du temps EPITA
 
 Une application mobile React Native développée avec Expo pour consulter votre emploi du temps Epita à tout moment.
 
