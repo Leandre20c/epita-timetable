@@ -13,6 +13,7 @@ EPITA Timetable permet aux étudiants d'EPITA de :
 ### Captures d'écran
 
 v1
+
 <img width="265" height="600" alt="image" src="https://github.com/user-attachments/assets/a9d9daaf-b037-498f-96f5-adf3295c25ab" />
 
 
@@ -52,7 +53,7 @@ v1
 - **Vue semaine** : Vue d'ensemble hebdomadaire
 - **Vue mois** : Calendrier mensuel avec événements
 
-#### Notifications
+#### Notifications [bêta]
 - Activation automatique des notifications de changements
 - Alertes en cas de cours annulés ou déplacés
 - Rappels avant les cours
@@ -61,11 +62,6 @@ v1
 - Cache automatique des données
 - Consultation possible sans connexion
 - Synchronisation lors de la reconnexion
-
-### Raccourcis utiles
-- Tapez sur un cours pour voir les détails
-- Glissez horizontalement pour changer de semaine
-- Tirez vers le bas pour actualiser
 
 ## 🛠️ Pour les développeurs
 
@@ -91,39 +87,6 @@ npm install
 npx expo start
 ```
 
-### Architecture du projet
-
-```
-epita-timetable/
-├── app/                    # Pages et navigation (Expo Router)
-│   ├── (tabs)/            # Navigation par onglets
-│   └── _layout.tsx        # Layout principal
-├── components/            # Composants réutilisables
-├── services/             # Services (API, notifications)
-│   ├── CalendarService.ts # Gestion du calendrier ICS
-│   └── NotificationService.ts # Notifications
-├── types/                # Types TypeScript
-├── hooks/                # Hooks personnalisés
-└── assets/              # Images et ressources
-```
-
-### Scripts disponibles
-
-```bash
-# Développement
-npm start                 # Lancer Expo
-npm run android          # Lancer sur Android
-npm run ios              # Lancer sur iOS
-
-# Build
-npm run build:android    # Build Android
-npm run build:ios        # Build iOS
-
-# Tests et qualité
-npm run lint             # ESLint
-npm run type-check       # Vérification TypeScript
-```
-
 ### Contribuer
 
 1. Forkez le projet
@@ -147,6 +110,12 @@ npm run type-check       # Vérification TypeScript
 - 🔄 Intégration calendrier système
 - 🔄 Partage de cours
 - 🔄 Mode sombre
+- 🔄 Visualisation par Mois plus claire
+- 🔄 Couleurs par cours
+- 🔄 Examens mis en evidences
+- 🔄 Gestion de notifications
+- 🔄 Changer de nom d'app
+- 🔄 Identitée claire et renforcée (UI, UX, Logos)
 
 ## 🐛 Signaler un bug
 
@@ -195,8 +164,7 @@ Pour proposer une nouvelle fonctionnalité :
 ## 📞 Support
 
 - **Issues GitHub** : Pour bugs et fonctionnalités
-- **Email** : [votre-email@epita.fr]
-- **Discord EPITA** : #timetable-app
+- **Email** : @leandre.vincent@epita.fr
 
 ## 📄 Licence
 
@@ -204,10 +172,9 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 ## 🙏 Remerciements
 
-- Équipe pédagogique EPITA pour l'accès aux données
-- Communauté React Native et Expo
-- Beta testeurs étudiants EPITA
+- Claude par anthropic
+- Bêta testeurs étudiants EPITA
 
 ---
 
-**Fait avec ❤️ par un étudiant EPITA pour les étudiants EPITA**
+**Par un étudiant d'Epita**
