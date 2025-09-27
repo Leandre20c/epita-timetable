@@ -5,7 +5,6 @@ import {
   Alert,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View
@@ -15,11 +14,12 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EventCard } from '../../components/EventCard';
+import { useSwipeNavigation } from '../../hook/useSwipeNavigation';
 import { CalendarService } from '../../services/CalendarService';
+import { COLORS, screenStyles } from '../../styles/screenStyles';
 import { CalendarEvent } from '../../types/CalendarTypes';
 
-
-import { useSwipeNavigation } from '../../hook/useSwipeNavigation';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function DayScreen() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -213,29 +213,28 @@ export default function DayScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3498db" />
-          <Text style={styles.loadingText}>Chargement du jour...</Text>
+      <SafeAreaView style={screenStyles.container}>
+        <View style={screenStyles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={screenStyles.loadingText}>Chargement du jour...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={screenStyles.container}>
       <View style={{ flex: 1 }}>
-        {/* En-tête - EN DEHORS du GestureDetector */}
         {/* En-tête cliquable pour aller à aujourd'hui */}
         <TouchableOpacity 
-          style={[styles.dayHeader, isToday() && styles.todayHeader]}
+          style={[screenStyles.dayHeader, isToday() && screenStyles.todayHeader]}
           onPress={handleToday}
           activeOpacity={0.7}
         >
-          <Text style={[styles.dayTitle, isToday() && styles.todayTitle]}>
+          <Text style={[screenStyles.dayTitle, isToday() && screenStyles.todayTitle]}>
             {formatDayLabel()}
           </Text>
-          <Text style={styles.eventCount}>
+          <Text style={screenStyles.eventCount}>
             {formatTotalHours()} de cours
           </Text>
         </TouchableOpacity>
@@ -244,107 +243,33 @@ export default function DayScreen() {
         <GestureDetector gesture={panGesture}>
           <Animated.View style={[{ flex: 1 }, animatedStyle]}>
             <ScrollView
-              style={styles.scrollView}
+              style={screenStyles.scrollView}
               refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />}
             >
               {events.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyIcon}>☀️</Text>
-                  <Text style={styles.emptyTitle}>Aucun cours</Text>
-                  <Text style={styles.emptySubtitle}>
+                <View style={screenStyles.emptyContainer}>
+                  <Text style={screenStyles.emptyIcon}>☀️</Text>
+                  <Text style={screenStyles.emptyTitle}>Aucun cours</Text>
+                  <Text style={screenStyles.emptySubtitle}>
                     {isToday() ? 'Profitez de votre journée libre !' : 'Pas de cours prévu demain'}
                   </Text>
                 </View>
               ) : (
-                <View style={styles.eventsContainer}>
+                <View style={screenStyles.eventsContainer}>
                   {events.map((event, index) => (
                     <EventCard key={event.id || `event-${index}`} event={event} />
                   ))}
                 </View>
               )}
             </ScrollView>
-          
           </Animated.View>
         </GestureDetector>
-        
+        <LinearGradient
+          colors={['transparent', COLORS.background]}
+          style={screenStyles.tabBarFadeOverlay}
+          pointerEvents="none"
+        />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa'
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#7f8c8d'
-  },
-  dayHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-  },
-  todayHeader: {
-    backgroundColor: '#f0f8ff',
-    borderLeftWidth: 0,
-    borderLeftColor: '#3498db'
-  },
-  dayTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    textTransform: 'capitalize',
-    textAlign: 'center'
-  },
-  todayTitle: {
-    color: '#3498db'
-  },
-  eventCount: {
-    fontSize: 16,
-    color: '#7f8c8d',
-    marginTop: 8
-  },
-  scrollView: {
-    flex: 1
-  },
-  eventsContainer: {
-    padding: 16
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 80,
-    paddingHorizontal: 32
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 8,
-    textAlign: 'center'
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: '#7f8c8d',
-    textAlign: 'center',
-    lineHeight: 24
-  },
-});

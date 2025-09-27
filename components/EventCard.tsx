@@ -2,6 +2,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ICSParser } from '../services/ICSParser';
+import { COLORS, screenStyles, SPACING } from '../styles/screenStyles';
 import { CalendarEvent } from '../types/CalendarTypes';
 
 interface EventCardProps {
@@ -60,12 +61,12 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
   return (
     <View style={[
-      styles.container,
+      screenStyles.eventCard,
       isCurrentEvent() && styles.currentEvent,
       isUpcoming() && styles.upcomingEvent
     ]}>
-      <View style={styles.header}>
-        <Text style={styles.title} numberOfLines={2}>
+      <View style={screenStyles.eventCardContent}>
+        <Text style={screenStyles.eventTitle} numberOfLines={2}>
           {event.summary}
         </Text>
         <Text style={[
@@ -78,7 +79,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
       
       <View style={styles.details}>
         <View style={styles.timeContainer}>
-          <Text style={styles.timeText}>
+          <Text style={screenStyles.eventTime}>
             🕐 {ICSParser.formatTime(event.startTime)} - {ICSParser.formatTime(event.endTime)}
           </Text>
           <Text style={styles.duration}>
@@ -87,7 +88,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         </View>
         
         {event.location && (
-          <Text style={styles.location} numberOfLines={1}>
+          <Text style={screenStyles.eventLocation} numberOfLines={1}>
             📍 {event.location}
           </Text>
         )}
@@ -102,53 +103,27 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
   );
 };
 
+// Styles spécifiques à EventCard qui ne sont pas dans le système centralisé
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    borderLeftWidth: 4,
-    borderLeftColor: '#e9ecef',
-  },
   currentEvent: {
-    borderLeftColor: '#e74c3c',
+    borderLeftColor: COLORS.danger,
     backgroundColor: '#fff5f5',
   },
   upcomingEvent: {
-    borderLeftColor: '#f39c12',
+    borderLeftColor: COLORS.warning,
     backgroundColor: '#fffbf0',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    flex: 1,
-    marginRight: 8,
-    lineHeight: 22,
   },
   status: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#7f8c8d',
-    backgroundColor: '#f8f9fa',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    color: COLORS.text.secondary,
+    backgroundColor: COLORS.background,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
     borderRadius: 12,
   },
   currentStatus: {
-    backgroundColor: '#e74c3c',
+    backgroundColor: COLORS.danger,
     color: '#ffffff',
   },
   details: {
@@ -158,24 +133,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  timeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2c3e50',
-  },
   duration: {
     fontSize: 12,
-    color: '#7f8c8d',
-    marginLeft: 8,
-  },
-  location: {
-    fontSize: 13,
-    color: '#7f8c8d',
+    color: COLORS.text.secondary,
+    marginLeft: SPACING.sm,
   },
   description: {
     fontSize: 13,
-    color: '#7f8c8d',
+    color: COLORS.text.secondary,
     lineHeight: 18,
-    marginTop: 4,
+    marginTop: SPACING.xs,
   },
 });
