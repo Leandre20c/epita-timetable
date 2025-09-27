@@ -124,29 +124,39 @@ export default function WeekScreen() {
           </View>
         ) : (
           <View style={styles.eventsContainer}>
-            {weekSchedule.days.map((day) => {
-              if (day.events.length === 0) return null;
-              
-              const dayDate = new Date(day.date + 'T00:00:00');
-              const isToday = new Date().toDateString() === dayDate.toDateString();
-              
-              return (
-                <View key={day.date} style={[styles.daySection, isToday && styles.todaySection]}>
-                  <Text style={[styles.dayTitle, isToday && styles.todayTitle]}>
-                    {dayDate.toLocaleDateString('fr-FR', { 
-                      weekday: 'long', 
-                      day: 'numeric', 
-                      month: 'short' 
-                    })}
-                    {isToday && ' (Aujourd\'hui)'}
-                  </Text>
-                  
-                  {day.events.map((event, index) => (
-                    <EventCard key={event.id || `event-${index}`} event={event} />
-                  ))}
-                </View>
-              );
-            })}
+            {weekSchedule.days
+              .filter(dayObj => dayObj.events.length > 0)
+              .map((dayObj) => {
+                // CORRECTION: Créer la date directement à partir des composants
+                // au lieu d'utiliser new Date(day.date + 'T00:00:00') qui peut causer des décalages UTC
+                const [year, month, dayNum] = dayObj.date.split('-').map(Number);
+                const dayDate = new Date(year, month - 1, dayNum);
+                
+                const isToday = new Date().toDateString() === dayDate.toDateString();
+
+                // Vérification que le jour fait partie de la semaine courante
+                const isInCurrentWeek = dayDate >= weekSchedule.weekStart && 
+                           dayDate <= weekSchedule.weekEnd;
+                           
+                if (!isInCurrentWeek) return null;
+                
+                return (
+                  <View key={dayObj.date} style={[styles.daySection, isToday && styles.todaySection]}>
+                    <Text style={[styles.dayTitle, isToday && styles.todayTitle]}>
+                      {dayDate.toLocaleDateString('fr-FR', { 
+                        weekday: 'long', 
+                        day: 'numeric', 
+                        month: 'short' 
+                      })}
+                      {isToday && ' (Aujourd\'hui)'}
+                    </Text>
+                    
+                    {dayObj.events.map((event, index) => (
+                      <EventCard key={event.id || `event-${index}`} event={event} />
+                    ))}
+                  </View>
+                );
+              })}
           </View>
         )}
       </ScrollView>

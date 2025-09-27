@@ -150,13 +150,15 @@ export class CalendarService {
       for (let i = 0; i < 7; i++) {
         const currentDate = new Date(weekStart);
         currentDate.setDate(weekStart.getDate() + i);
+
+        console.log(`Jour ${i}: ${currentDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' })}`);
         
         const dayEvents = events.filter(event => 
           ICSParser.isSameDay(event.startTime, currentDate)
         );
         
         days.push({
-          date: currentDate.toISOString().split('T')[0],
+          date: `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`,
           events: dayEvents
         });
       }
@@ -246,12 +248,13 @@ export class CalendarService {
 
   // Utilitaires de navigation
   public static getWeekStart(date: Date): Date {
-  const weekStart = new Date(date);
-  const dayOfWeek = weekStart.getDay();
-  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Lundi comme premier jour
-  weekStart.setDate(weekStart.getDate() + diff);
-  weekStart.setHours(0, 0, 0, 0);
-  return weekStart;
+    const weekStart = new Date(date);
+    const dayOfWeek = weekStart.getDay();
+
+    const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    weekStart.setDate(weekStart.getDate() - mondayOffset);
+    weekStart.setHours(0, 0, 0, 0);
+    return weekStart;
 }
 
   public static getPreviousWeek(currentWeekStart: Date): Date {
