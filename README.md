@@ -13,7 +13,7 @@ EPITA Timetable permet aux étudiants d'EPITA de :
 ### Captures d'écran
 
 v1
-<img width="1080/3" height="2400/3" alt="image" src="https://github.com/user-attachments/assets/a9d9daaf-b037-498f-96f5-adf3295c25ab" />
+<img width="540" height="1200" alt="image" src="https://github.com/user-attachments/assets/a9d9daaf-b037-498f-96f5-adf3295c25ab" />
 
 
 ## 🚀 Installation
