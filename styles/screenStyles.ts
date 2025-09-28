@@ -600,6 +600,7 @@ export const modalStyles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: SPACING.md,
     marginBottom: SPACING.lg,
+    justifyContent: 'center',
   },
   
   colorOption: {

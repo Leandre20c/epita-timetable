@@ -192,7 +192,7 @@ class SubjectColorService {
 
   // Méthode publique pour obtenir le mot-clé principal (utile pour l'UI)
   getMainKeyword(title: string): string | null {
-    return this.findMainKeyword(title);
+    return this.findMainKeyword(title)?.toUpperCase() || null;
   }
 
   getAllColors(): { [key: string]: string } {

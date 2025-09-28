@@ -12,6 +12,7 @@ import React, { useEffect, useState } from 'react';
 import {
     Alert,
     Modal,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -141,157 +142,237 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
   return (
     <Modal
       visible={isVisible}
-      animationType="slide"
-      presentationStyle="pageSheet"
+      transparent={true}
+      animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={modalStyles.modalContainer}>
-        {/* Header */}
-        <View style={modalStyles.modalHeader}>
-          <TouchableOpacity onPress={onClose} style={modalStyles.modalCloseButton}>
-            <X size={24} color={COLORS.light.text.primary} />
-          </TouchableOpacity>
-          <Text style={modalStyles.modalHeaderTitle}>Détails du cours</Text>
-          <View style={styles.placeholder} />
-        </View>
-
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Titre avec couleur */}
-          <View style={[modalStyles.sectionWithBorder, { borderLeftColor: selectedColor }]}>
-            <Text style={styles.eventTitle}>{event.summary}</Text>
-            <View style={[modalStyles.statusBadge, { backgroundColor: status.color }]}>
-              <Text style={modalStyles.statusText}>{status.text}</Text>
-            </View>
-          </View>
-
-          {/* Informations principales */}
-          <View style={[modalStyles.section, { marginTop: 0, gap: SPACING.md }]}>
-            <View style={modalStyles.infoRow}>
-              <Calendar size={20} color={COLORS.light.text.secondary} />
-              <Text style={modalStyles.infoText}>{formatEventDate(event.startTime)}</Text>
-            </View>
-
-            <View style={modalStyles.infoRow}>
-              <Clock size={20} color={COLORS.light.text.secondary} />
-              <Text style={modalStyles.infoText}>
-                {ICSParser.formatTime(event.startTime)} - {ICSParser.formatTime(event.endTime)}
+      {/* Overlay semi-transparent cliquable */}
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <View style={styles.popupContainer}>
+          {/* Container qui ne propage pas le clic */}
+          <Pressable onPress={() => {}} style={styles.popupContent}>
+            
+            {/* Header compact */}
+            <View style={styles.popupHeader}>
+              <Text style={styles.popupTitle} numberOfLines={2}>
+                {event.summary}
               </Text>
-              <Text style={styles.duration}>({getDuration()})</Text>
-            </View>
-
-            {event.location && (
-              <View style={modalStyles.infoRow}>
-                <MapPin size={20} color={COLORS.light.text.secondary} />
-                <Text style={modalStyles.infoText}>{event.location}</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Description */}
-          {event.description && (
-            <View style={[modalStyles.section, { marginTop: 0 }]}>
-              <Text style={modalStyles.sectionTitle}>Description</Text>
-              <Text style={modalStyles.descriptionText}>{event.description}</Text>
-            </View>
-          )}
-
-          {/* Actions */}
-          <View style={[styles.actionsSection]}>
-            {/* Notification (pour plus tard) */}
-            <TouchableOpacity style={modalStyles.actionButton} disabled>
-              <Bell size={20} color={COLORS.light.text.secondary} />
-              <Text style={[modalStyles.actionText, { color: COLORS.light.text.secondary }]}>
-                Ajouter une notification
-              </Text>
-              <Text style={styles.comingSoon}>(Bientôt)</Text>
-            </TouchableOpacity>
-
-            {/* Changement de couleur */}
-            <TouchableOpacity 
-              style={modalStyles.actionButton}
-              onPress={() => setShowColorPicker(true)}
-            >
-              <Palette size={20} color={COLORS.primary} />
-              <Text style={[modalStyles.actionText, { color: COLORS.primary }]}>
-                Changer la couleur
-              </Text>
-              <View style={[styles.colorPreview, { backgroundColor: selectedColor }]} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Sélecteur de couleurs */}
-          {showColorPicker && (
-            <View style={[modalStyles.section, { marginTop: 0 }]}>
-              <Text style={modalStyles.sectionTitle}>Choisir une couleur</Text>
-              <Text style={modalStyles.secondaryText}>
-                {mainKeyword 
-                  ? `Cette couleur sera appliquée à tous les cours au mot-clé associés`
-                  : `Cette couleur sera appliquée uniquement au cours "${event.summary}"`
-                }
-              </Text>
-              
-              {/* Afficher le mot-clé détecté */}
-              {mainKeyword && (
-                <View style={styles.keywordInfo}>
-                  <Text style={styles.keywordText}>
-                    Mot-clé détecté : <Text style={styles.keywordHighlight}>{mainKeyword}</Text>
-                  </Text>
-                </View>
-              )}
-              
-              <View style={modalStyles.colorGrid}>
-                {AVAILABLE_COLORS.map((color) => (
-                  <TouchableOpacity
-                    key={color.value}
-                    style={[
-                      modalStyles.colorOption,
-                      { backgroundColor: color.value },
-                      selectedColor === color.value && modalStyles.selectedColorOption
-                    ]}
-                    onPress={() => handleColorSelect(color.value)}
-                  >
-                    {selectedColor === color.value && (
-                      <Check size={16} color="white" />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <TouchableOpacity
-                style={styles.cancelColorButton}
-                onPress={() => setShowColorPicker(false)}
-              >
-                <Text style={styles.cancelColorText}>Annuler</Text>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <X size={20} color={COLORS.light.text.secondary} />
               </TouchableOpacity>
             </View>
-          )}
-        </ScrollView>
-      </View>
+
+            {/* Contenu scrollable */}
+            <ScrollView style={styles.popupScrollContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.sectionInPopup}>
+                
+                {/* Status avec couleur */}
+                <View style={[styles.statusSection]}>
+                  <View style={[modalStyles.statusBadge, { backgroundColor: status.color }]}>
+                    <Text style={modalStyles.statusText}>{status.text}</Text>
+                  </View>
+                </View>
+
+                {/* Informations principales */}
+                <View style={[modalStyles.section, { marginTop: 0, gap: SPACING.md, borderLeftWidth: 5, borderLeftColor: selectedColor }]}>
+                  <View style={modalStyles.infoRow}>
+                    <Calendar size={20} color={COLORS.light.text.secondary} />
+                    <Text style={modalStyles.infoText}>{formatEventDate(event.startTime)}</Text>
+                  </View>
+
+                  <View style={modalStyles.infoRow}>
+                    <Clock size={20} color={COLORS.light.text.secondary} />
+                    <Text style={modalStyles.infoText}>
+                      {ICSParser.formatTime(event.startTime)} - {ICSParser.formatTime(event.endTime)}
+                    </Text>
+                    <Text style={styles.duration}>({getDuration()})</Text>
+                  </View>
+
+                  {event.location && (
+                    <View style={modalStyles.infoRow}>
+                      <MapPin size={20} color={COLORS.light.text.secondary} />
+                      <Text style={modalStyles.infoText}>{event.location}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Description */}
+                {event.description && (
+                  <View style={[modalStyles.section, { marginTop: 0 }]}>
+                    <Text style={modalStyles.sectionTitle}>Description</Text>
+                    <Text style={modalStyles.descriptionText}>{event.description}</Text>
+                  </View>
+                )}
+
+                {/* Actions */}
+                <View style={styles.actionsSection}>
+                  {/* Notification (pour plus tard) */}
+                  <TouchableOpacity style={modalStyles.actionButton} disabled>
+                    <Bell size={20} color={COLORS.light.text.secondary} />
+                    <Text style={[modalStyles.actionText, { color: COLORS.light.text.secondary }]}>
+                      Ajouter une notification
+                    </Text>
+                    <Text style={styles.comingSoon}>(Bientôt)</Text>
+                  </TouchableOpacity>
+
+                  {/* Changement de couleur */}
+                  <TouchableOpacity 
+                    style={modalStyles.actionButton}
+                    onPress={() => setShowColorPicker(true)}
+                  >
+                    <Palette size={20} color={COLORS.primary} />
+                    <Text style={[modalStyles.actionText, { color: COLORS.primary }]}>
+                      Changer la couleur
+                    </Text>
+                    <View style={[styles.colorPreview, { backgroundColor: selectedColor }]} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Sélecteur de couleurs */}
+                {showColorPicker && (
+                  <View style={[modalStyles.section, { marginTop: SPACING.xs, marginHorizontal: -SPACING.xs }]}>
+                    <Text style={modalStyles.sectionTitle}>Choisir une couleur</Text>
+                    <Text style={modalStyles.secondaryText}>
+                      {mainKeyword 
+                        ? `Cette couleur sera appliquée à tous les cours au mot-clé associés`
+                        : `Cette couleur sera appliquée uniquement au cours "${event.summary}"`
+                      }
+                    </Text>
+                    
+                    {/* Afficher le mot-clé détecté */}
+                    {mainKeyword && (
+                      <View style={styles.keywordInfo}>
+                        <Text style={styles.keywordText}>
+                          Mot-clé détecté : <Text style={styles.keywordHighlight}>{mainKeyword}</Text>
+                        </Text>
+                      </View>
+                    )}
+                    
+                    <View style={modalStyles.colorGrid}>
+                      {AVAILABLE_COLORS.map((color) => (
+                        <TouchableOpacity
+                          key={color.value}
+                          style={[
+                            modalStyles.colorOption,
+                            { backgroundColor: color.value },
+                            selectedColor === color.value && modalStyles.selectedColorOption
+                          ]}
+                          onPress={() => handleColorSelect(color.value)}
+                        >
+                          {selectedColor === color.value && (
+                            <Check size={16} color="white" />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.cancelColorButton}
+                      onPress={() => setShowColorPicker(false)}
+                    >
+                      <Text style={styles.cancelColorText}>Annuler</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+            
+          </Pressable>
+        </View>
+      </Pressable>
     </Modal>
   );
 };
 
 // Styles spécifiques au modal (non réutilisables)
 const styles = StyleSheet.create({
-  placeholder: {
-    width: 32
+  // === NOUVEAUX STYLES POPUP ===
+  
+  // Overlay qui couvre tout l'écran
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.lg,
   },
-  content: {
-    flex: 1
+  
+  // Container de la popup
+  popupContainer: {
+    width: '100%',
+    maxWidth: 420, // Largeur maximale pour les tablets
+    maxHeight: '85%', // Hauteur maximale
   },
-  eventTitle: {
-    fontSize: 22,
+  
+  // Contenu de la popup
+  popupContent: {
+    backgroundColor: COLORS.light.background,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 20,
+    overflow: 'hidden',
+  },
+  
+  // Header compact de la popup
+  popupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: SPACING.lg,
+    paddingBottom: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.light.border,
+    backgroundColor: COLORS.light.cardBackground,
+  },
+  
+  // Titre dans la popup
+  popupTitle: {
+    flex: 1,
+    fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.light.text.primary,
-    marginBottom: SPACING.sm
+    marginRight: SPACING.md,
   },
+  
+  // Bouton fermer
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.light.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  // Zone scrollable du contenu
+  popupScrollContent: {
+    maxHeight: '100%',
+  },
+  
+  // Ajustements pour le contenu dans la popup
+  sectionInPopup: {
+    padding: SPACING.lg,
+    paddingTop: SPACING.md,
+  },
+
+  // Section status adaptée
+  statusSection: {
+    paddingLeft: SPACING.md,
+    marginBottom: SPACING.md,
+    alignItems: 'flex-start',
+  },
+  
+  // === STYLES EXISTANTS ADAPTÉS ===
+  
   duration: {
     fontSize: 14,
     color: COLORS.light.text.secondary
   },
   actionsSection: {
-    margin: SPACING.lg,
-    marginTop: 0,
+    marginTop: SPACING.md,
     gap: SPACING.sm
   },
   comingSoon: {
