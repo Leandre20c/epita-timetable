@@ -325,6 +325,64 @@ export const screenStyles = StyleSheet.create({
     color: COLORS.text.secondary,
   },
 
+  // --- PROFIL ---
+  appHeader: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.lg,
+  },
+
+  appTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+    textAlign: 'left',
+    marginBottom: SPACING.sm,
+    marginHorizontal: 40,
+  },
+
+  appSubtitle: {
+    fontSize: 16,
+    color: COLORS.text.secondary,
+    textAlign: 'left',
+    marginHorizontal: 40,
+  },
+
+  profileHeader: {
+    marginTop: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary,
+    color: '#20232a',
+    textAlign: 'left',
+    marginHorizontal: 40,
+    elevation: 15,
+    flexDirection: 'row', // Ajouter
+    alignItems: 'center', // Ajouter
+    justifyContent: 'space-between',
+    height: 120,
+  },
+
+  profileTextContainer: {
+    flex: 1,
+    paddingLeft: 16,
+},
+
+profileTypeClass: {
+  color: '#ffffff',
+  fontSize: 30,
+  fontWeight: 'bold',
+},
+
+profileTypeGroup: {
+  color: '#ffffff',
+  fontSize: 30,
+  fontWeight: 'ultralight',
+},
+
+profileTypeSwitch: {
+  paddingRight: 16,
+},
+
   // --- ÉTATS VIDES ---
   emptyContainer: {
     alignItems: 'center',
