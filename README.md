@@ -1,10 +1,15 @@
-# EPITA Timetable
+# EpiTime
+
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Leandre20c/epita-timetable/releases)
+[![Platform](https://img.shields.io/badge/platform-Android-green.svg)](https://github.com/Leandre20c/epita-timetable)
+[![License](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/Leandre20c/epita-timetable/total.svg)](https://github.com/Leandre20c/epita-timetable/releases)
 
 Application mobile pour consulter l'emploi du temps EPITA de manière intuitive et moderne.
 
 ## 📱 Aperçu
 
-EPITA Timetable permet aux étudiants d'EPITA de :
+EpiTime permet aux étudiants d'EPITA de :
 - Consulter leur emploi du temps en temps réel
 - Naviguer par jour, semaine ou mois
 - Recevoir des notifications en cas de changements
@@ -12,7 +17,7 @@ EPITA Timetable permet aux étudiants d'EPITA de :
 
 ### Captures d'écran
 
-v1
+v1.1.0
 
 <img width="265" height="600" alt="image" src="https://github.com/user-attachments/assets/a9d9daaf-b037-498f-96f5-adf3295c25ab" />
 
@@ -56,7 +61,7 @@ v1
 #### Notifications [bêta]
 - Activation automatique des notifications de changements
 - Alertes en cas de cours annulés ou déplacés
-- Rappels avant les cours
+- Rappels avant les cours _(bientôt)_
 
 #### Mode hors ligne
 - Cache automatique des données
@@ -97,25 +102,28 @@ npx expo start
 
 ## 📋 Changelog
 
-### Version 1.0.0 (Actuelle)
+### Version 1.0.0
 - ✅ Synchronisation emploi du temps EPITA
 - ✅ Navigation jour/semaine/mois
 - ✅ Notifications de changements
 - ✅ Mode hors ligne
 - ✅ Interface moderne et intuitive
+### Version 1.1.0 (Actuelle)
+- ✅ Swipe Gauche / Droite
+- ✅ Boutons de navigations retirés
+- ✅ UI & UX plus moderne et intuitive
+- ✅ Possibilité d'associer une couleur par cours
+- ✅ Couleurs logiques
+- ✅ Création d'un logo
+- ✅ Changement de nom -> EpiTime
 
 ### Prochaines versions
 - 🔄 Version iOS
 - 🔄 Widget Android
-- 🔄 Intégration calendrier système
-- 🔄 Partage de cours
 - 🔄 Mode sombre
 - 🔄 Visualisation par Mois plus claire
-- 🔄 Couleurs par cours
-- 🔄 Examens mis en evidences
 - 🔄 Gestion de notifications
-- 🔄 Changer de nom d'app
-- 🔄 Identitée claire et renforcée (UI, UX, Logos)
+- 🔄 Possibilité de choisir sa classe
 
 ## 🐛 Signaler un bug
 
@@ -178,3 +186,5 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 ---
 
 **Par un étudiant d'Epita**
+**Non affilié à Epita**
+**Projet étudiant à but non lucratif**
