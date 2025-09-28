@@ -8,6 +8,7 @@ const COLORS = {
   primary: '#3498db',
   secondary: '#7f8c8d',
   background: '#f8f9fa',
+  surface: '#ffffff',
   cardBackground: '#ffffff',
   border: '#e9ecef',
   success: '#27ae60',
@@ -411,6 +412,125 @@ profileTypeSwitch: {
     textAlign: 'center',
     lineHeight: 24,
   },
+});
+
+export const modalStyles = StyleSheet.create({
+  // Styles de base pour modales
+  modalContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.surface
+  },
+  modalHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text.primary
+  },
+  modalCloseButton: {
+    padding: SPACING.xs
+  },
+  
+  // Sections communes
+  section: {
+    margin: SPACING.lg,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.surface,
+    borderRadius: 12
+  },
+  sectionWithBorder: {
+    margin: SPACING.lg,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    borderLeftWidth: 4
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text.primary,
+    marginBottom: SPACING.sm
+  },
+  
+  // Lignes d'information
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md
+  },
+  infoText: {
+    fontSize: 16,
+    color: COLORS.text.primary,
+    flex: 1
+  },
+  
+  // Boutons d'action
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.lg,
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    gap: SPACING.md
+  },
+  actionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    flex: 1
+  },
+  
+  // Badges et statuts
+  statusBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    borderRadius: 16
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'white'
+  },
+  
+  // Grilles de couleurs
+  colorGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.md,
+    marginBottom: SPACING.lg
+  },
+  colorOption: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent'
+  },
+  selectedColorOption: {
+    borderColor: COLORS.text.primary
+  },
+  
+  // Textes secondaires
+  secondaryText: {
+    fontSize: 14,
+    color: COLORS.text.secondary,
+    lineHeight: 20
+  },
+  descriptionText: {
+    fontSize: 15,
+    color: COLORS.text.secondary,
+    lineHeight: 22
+  }
 });
 
 // ===================================

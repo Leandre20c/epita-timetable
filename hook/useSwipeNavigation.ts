@@ -1,4 +1,5 @@
-// hook/useSwipeNavigation.ts
+// hook/useSwipeNavigation.ts - Final version - Bug : les events crads ne se render pas assze vite
+// Ducoup quand on swipe on render a coté de l'ecran puis on fait la transition
 import { Gesture } from 'react-native-gesture-handler';
 import { runOnJS, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -37,13 +38,13 @@ export const useSwipeNavigation = ({
           translateX.value = withTiming(300, { duration: 100 }, () => {
             runOnJS(onSwipeRight)();
             translateX.value = -600;
-          translateX.value = withTiming(0, { duration: 125 });
+          translateX.value = withTiming(0, { duration: 150 });
           });
         } else if (translationX < -50 && canSwipeLeft) {
           translateX.value = withTiming(-300, { duration: 100 }, () => {
             runOnJS(onSwipeLeft)();
             translateX.value = 600;
-          translateX.value = withTiming(0, { duration: 125 });
+          translateX.value = withTiming(0, { duration: 150 });
           });
         } else {
           translateX.value = withTiming(0, { duration: 200 });

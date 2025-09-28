@@ -27,6 +27,10 @@ export default function DayScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Refresh on color changed
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [excludeFromRefresh, setExcludeFromRefresh] = useState<string | null>(null);
+  
   // évenements préchargés pour les jours voisins
   const [preloadedEvents, setPreloadedEvents] = useState<{
     [key: string]: CalendarEvent[]
@@ -135,11 +139,9 @@ export default function DayScreen() {
     canSwipeRight: true
   });
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
   const formatDayLabel = (): string => {
     try {
@@ -256,9 +258,23 @@ export default function DayScreen() {
                 </View>
               ) : (
                 <View style={screenStyles.eventsContainer}>
-                  {events.map((event, index) => (
-                    <EventCard key={event.id || `event-${index}`} event={event} />
-                  ))}
+                  {events.map((event, index) => {
+                    const eventKey = event.id || `event-${index}`;
+                    const shouldRefresh = excludeFromRefresh !== eventKey;
+                    
+                    return (
+                      <EventCard 
+                        key={shouldRefresh ? `${eventKey}-${refreshTrigger}` : eventKey}
+                        event={event}
+                        onColorChanged={(eventId) => {
+                          setExcludeFromRefresh(eventId);
+                          setRefreshTrigger(prev => prev + 1);
+                          // Réinitialiser l'exclusion après un délai
+                          setTimeout(() => setExcludeFromRefresh(null), 1000);
+                        }}
+                      />
+                    );
+                  })}
                 </View>
               )}
             </ScrollView>

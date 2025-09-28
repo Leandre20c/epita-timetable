@@ -1,19 +1,23 @@
 // app/(tabs)/week.tsx
-import React, { useEffect, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EventCard } from '../../components/EventCard';
+import { useSwipeNavigation } from '../../hook/useSwipeNavigation';
 import { CalendarService } from '../../services/CalendarService';
+import { COLORS, screenStyles } from '../../styles/screenStyles';
 import { WeekSchedule } from '../../types/CalendarTypes';
 
 export default function WeekScreen() {
@@ -22,23 +26,90 @@ export default function WeekScreen() {
   );
   const [weekSchedule, setWeekSchedule] = useState<WeekSchedule | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Événements préchargés pour les semaines voisines
+  const [preloadedSchedules, setPreloadedSchedules] = useState<{
+    [key: string]: WeekSchedule
+  }>({});
+
+  const formatWeekKey = (weekStart: Date): string => {
+    return weekStart.toISOString().split('T')[0];
+  };
+
+  const preloadAdjacentWeeks = useCallback(async (centerWeekStart: Date) => {
+    const previousWeek = CalendarService.getPreviousWeek(centerWeekStart);
+    const nextWeek = CalendarService.getNextWeek(centerWeekStart);
+
+    const previousKey = formatWeekKey(previousWeek);
+    const nextKey = formatWeekKey(nextWeek);
+
+    // Précharger seulement si pas déjà en cache
+    const preloadPromises = [];
+    
+    if (!preloadedSchedules[previousKey]) {
+      preloadPromises.push(
+        CalendarService.getWeekSchedule(previousWeek).then(schedule => 
+          setPreloadedSchedules(prev => ({ ...prev, [previousKey]: schedule }))
+        )
+      );
+    }
+    
+    if (!preloadedSchedules[nextKey]) {
+      preloadPromises.push(
+        CalendarService.getWeekSchedule(nextWeek).then(schedule => 
+          setPreloadedSchedules(prev => ({ ...prev, [nextKey]: schedule }))
+        )
+      );
+    }
+
+    // Lancer les préchargements en arrière-plan
+    Promise.all(preloadPromises).catch(error => 
+      console.warn('Erreur préchargement semaines:', error)
+    );
+  }, [preloadedSchedules]);
 
   const loadWeekData = async (weekStart: Date) => {
     try {
       setIsLoading(true);
-      console.log('🔄 Chargement de la semaine');
+      const weekKey = formatWeekKey(weekStart);
       
-      const schedule = await CalendarService.getWeekSchedule(weekStart);
+      let schedule: WeekSchedule;
+      
+      if (preloadedSchedules[weekKey]) {
+        console.log('⚡ Utilisation du cache préchargé pour', weekKey);
+        schedule = preloadedSchedules[weekKey];
+      } else {
+        console.log('🔄 Chargement de la semaine:', weekStart.toLocaleDateString('fr-FR'));
+        schedule = await CalendarService.getWeekSchedule(weekStart);
+        setPreloadedSchedules(prev => ({ ...prev, [weekKey]: schedule }));
+      }
+      
       setWeekSchedule(schedule);
       
+      setTimeout(() => preloadAdjacentWeeks(weekStart), 100);
       const totalEvents = schedule.days.reduce((sum, day) => sum + day.events.length, 0);
       console.log('✅ Semaine chargée avec', totalEvents, 'événements');
     } catch (error) {
       console.error('❌ Erreur lors du chargement de la semaine:', error);
       Alert.alert('Erreur', 'Impossible de charger la semaine');
+      setWeekSchedule(null);
     } finally {
       setIsLoading(false);
+      setIsTransitioning(false);
     }
+  };
+
+  const handlePrevious = () => {
+    setIsTransitioning(true);
+    const prevWeek = CalendarService.getPreviousWeek(currentWeekStart);
+    setCurrentWeekStart(prevWeek);
+  };
+
+  const handleNext = () => {
+    setIsTransitioning(true);
+    const nextWeek = CalendarService.getNextWeek(currentWeekStart);
+    setCurrentWeekStart(nextWeek);
   };
 
   useEffect(() => {
@@ -50,24 +121,54 @@ export default function WeekScreen() {
     loadWeekData(currentWeekStart);
   };
 
-  const handlePrevious = () => {
-    const prevWeek = CalendarService.getPreviousWeek(currentWeekStart);
-    setCurrentWeekStart(prevWeek);
+  const handleToday = () => {
+    const today = CalendarService.getWeekStart(new Date());
+    setCurrentWeekStart(today);
   };
 
-  const handleNext = () => {
-    const nextWeek = CalendarService.getNextWeek(currentWeekStart);
-    setCurrentWeekStart(nextWeek);
-  };
+  const { panGesture, translateX } = useSwipeNavigation({
+    onSwipeLeft: handleNext,
+    onSwipeRight: handlePrevious,
+    canSwipeLeft: true,
+    canSwipeRight: true
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+    };
+  });
 
   const getCurrentWeekLabel = (): string => {
     if (!weekSchedule) return 'Semaine';
-    return CalendarService.formatWeekPeriod(weekSchedule.weekStart, weekSchedule.weekEnd);
+    
+    try {
+      const thisWeek = CalendarService.getWeekStart(new Date());
+      const isCurrentWeek = Math.abs(currentWeekStart.getTime() - thisWeek.getTime()) < 24 * 60 * 60 * 1000;
+      
+      if (isCurrentWeek) return 'Cette semaine';
+      
+      return CalendarService.formatWeekPeriod(weekSchedule.weekStart, weekSchedule.weekEnd);
+    } catch (error) {
+      return 'Semaine';
+    }
   };
 
   const getTotalEvents = (): number => {
     if (!weekSchedule) return 0;
     return weekSchedule.days.reduce((sum, day) => sum + day.events.length, 0);
+  };
+
+  const formatTotalHours = (): string => {
+    const totalEvents = getTotalEvents();
+    
+    if (totalEvents === 0) {
+      return 'Pas';
+    }
+    
+    // Estimation moyenne de 2h par cours
+    const totalHours = totalEvents * 2;
+    return `${totalHours} ${totalHours > 1 ? 'heures' : 'heure'}`;
   };
 
   const isCurrentWeek = (): boolean => {
@@ -77,211 +178,87 @@ export default function WeekScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3498db" />
-          <Text style={styles.loadingText}>Chargement de la semaine...</Text>
+      <SafeAreaView style={screenStyles.container}>
+        <View style={screenStyles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={screenStyles.loadingText}>Chargement de la semaine...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Navigation */}
-      <View style={styles.navigationContainer}>
-        <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
-          <Text style={styles.navButtonText}>◄</Text>
+    <View style={screenStyles.container}>
+      <View style={{ flex: 1 }}>
+        {/* En-tête cliquable pour aller à cette semaine */}
+        <TouchableOpacity 
+          style={[screenStyles.dayHeader, isCurrentWeek() && screenStyles.todayHeader]}
+          onPress={handleToday}
+          activeOpacity={0.7}
+        >
+          <Text style={[screenStyles.dayTitle, isCurrentWeek() && screenStyles.todayTitle]}>
+            {getCurrentWeekLabel()}
+          </Text>
+          <Text style={screenStyles.eventCount}>
+            {formatTotalHours()} de cours
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navButton} onPress={handleNext}>
-          <Text style={styles.navButtonText}>►</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* En-tête de la semaine */}
-      <View style={[styles.weekHeader, isCurrentWeek() && styles.currentWeekHeader]}>
-        <Text style={[styles.weekTitle, isCurrentWeek() && styles.currentWeekTitle]}>
-          {getCurrentWeekLabel()} 
-        </Text>
-        <Text style={styles.eventCount}>
-          {getTotalEvents()} cours{getTotalEvents() > 1 ? '' : ''}
-        </Text>
-      </View>
-
-      {/* Contenu */}
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />}
-      >
-        {!weekSchedule || getTotalEvents() === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>☀️</Text>
-            <Text style={styles.emptyTitle}>Aucun cours</Text>
-            <Text style={styles.emptySubtitle}>
-              {isCurrentWeek() ? 'Aucun cours prévu cette semaine\nVa trouver un travail au moins' : 'Aucun cours prévu cette semaine-là\nPrévois de réviser au moins'}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.eventsContainer}>
-            {weekSchedule.days
-              .filter(dayObj => dayObj.events.length > 0)
-              .map((dayObj) => {
-                // CORRECTION: Créer la date directement à partir des composants
-                // au lieu d'utiliser new Date(day.date + 'T00:00:00') qui peut causer des décalages UTC
-                const [year, month, dayNum] = dayObj.date.split('-').map(Number);
-                const dayDate = new Date(year, month - 1, dayNum);
-                
-                const isToday = new Date().toDateString() === dayDate.toDateString();
-
-                // Vérification que le jour fait partie de la semaine courante
-                const isInCurrentWeek = dayDate >= weekSchedule.weekStart && 
-                           dayDate <= weekSchedule.weekEnd;
-                           
-                if (!isInCurrentWeek) return null;
-                
-                return (
-                  <View key={dayObj.date} style={[styles.daySection, isToday && styles.todaySection]}>
-                    <Text style={[styles.dayTitle, isToday && styles.todayTitle]}>
-                      {dayDate.toLocaleDateString('fr-FR', { 
-                        weekday: 'long', 
-                        day: 'numeric', 
-                        month: 'short' 
-                      })}
-                      {isToday && ' (Aujourd\'hui)'}
-                    </Text>
+        {/* Contenu avec swipe */}
+        <GestureDetector gesture={panGesture}>
+          <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+            <ScrollView
+              style={screenStyles.scrollView}
+              refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />}
+            >
+              {!weekSchedule || getTotalEvents() === 0 ? (
+                <View style={screenStyles.emptyContainer}>
+                  <Text style={screenStyles.emptyIcon}>☀️</Text>
+                  <Text style={screenStyles.emptyTitle}>Aucun cours</Text>
+                  <Text style={screenStyles.emptySubtitle}>
+                    {isCurrentWeek() 
+                      ? 'Aucun cours prévu cette semaine\nProfitez-en pour réviser !' 
+                      : 'Aucun cours prévu cette semaine-là'
+                    }
+                  </Text>
+                </View>
+              ) : (
+                <View style={screenStyles.eventsContainer}>
+                  {weekSchedule.days.map((day) => {
+                    if (day.events.length === 0) return null;
                     
-                    {dayObj.events.map((event, index) => (
-                      <EventCard key={event.id || `event-${index}`} event={event} />
-                    ))}
-                  </View>
-                );
-              })}
-          </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+                    const dayDate = new Date(day.date + 'T00:00:00');
+                    const isToday = new Date().toDateString() === dayDate.toDateString();
+                    
+                    return (
+                      <View key={day.date} style={screenStyles.daySection}>
+                        <Text style={[screenStyles.dayTitle, isToday && screenStyles.todayTitle]}>
+                          {dayDate.toLocaleDateString('fr-FR', { 
+                            weekday: 'long', 
+                            day: 'numeric', 
+                            month: 'short' 
+                          })}
+                          {isToday && ' (Aujourd\'hui)'}
+                        </Text>
+                        
+                        {day.events.map((event, index) => (
+                          <EventCard key={event.id || `event-${index}`} event={event} />
+                        ))}
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </ScrollView>
+          </Animated.View>
+        </GestureDetector>
+        
+        <LinearGradient
+          colors={['transparent', COLORS.background]}
+          style={screenStyles.tabBarFadeOverlay}
+          pointerEvents="none"
+        />
+      </View>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa'
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#7f8c8d'
-  },
-  navigationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef'
-  },
-  navButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#e9ecef'
-  },
-  navButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#495057'
-  },
-  weekHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    alignItems: 'center'
-  },
-  currentWeekHeader: {
-    backgroundColor: '#f0f8ff',
-    borderLeftWidth: 4,
-    borderLeftColor: '#3498db'
-  },
-  weekTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    textTransform: 'capitalize',
-    textAlign: 'center'
-  },
-  currentWeekTitle: {
-    color: '#3498db'
-  },
-  eventCount: {
-    fontSize: 16,
-    color: '#7f8c8d',
-    marginTop: 8
-  },
-  scrollView: {
-    flex: 1
-  },
-  eventsContainer: {
-    padding: 16
-  },
-  daySection: {
-    marginBottom: 24,
-    padding: 16,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5
-  },
-  todaySection: {
-    borderWidth: 2,
-    borderColor: '#3498db'
-  },
-  dayTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 12,
-    textTransform: 'capitalize'
-  },
-  todayTitle: {
-    color: '#3498db'
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 80,
-    paddingHorizontal: 32
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 8,
-    textAlign: 'center'
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: '#7f8c8d',
-    textAlign: 'center',
-    lineHeight: 24
-  }
-});
