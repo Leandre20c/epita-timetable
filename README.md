@@ -1,6 +1,6 @@
 # EpiTime
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Leandre20c/epita-timetable/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/Leandre20c/epita-timetable/releases)
 [![Platform](https://img.shields.io/badge/platform-Android-green.svg)](https://github.com/Leandre20c/epita-timetable)
 [![License](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/Leandre20c/epita-timetable/total.svg)](https://github.com/Leandre20c/epita-timetable/releases)
