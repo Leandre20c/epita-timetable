@@ -15,18 +15,26 @@ export const SUBJECT_COLORS: { [key: string]: string } = {
 
 // Couleurs disponibles pour le sélecteur
 export const AVAILABLE_COLORS = [
-  { name: 'Rouge', value: '#e74c3c' },
-  { name: 'Bleu', value: '#3498db' },
-  { name: 'Vert', value: '#27ae60' },
-  { name: 'Orange', value: '#f39c12' },
-  { name: 'Violet', value: '#9b59b6' },
-  { name: 'Turquoise', value: '#1abc9c' },
-  { name: 'Jaune', value: '#f1c40f' },
-  { name: 'Rose', value: '#e91e63' },
-  { name: 'Indigo', value: '#3f51b5' },
-  { name: 'Cyan', value: '#00bcd4' },
-  { name: 'Marron', value: '#795548' },
-  { name: 'Gris', value: '#607d8b' }
+  // Chaudes
+  { name: 'Bordeaux', value: '#8b0000' },
+  { name: 'Rouge', value: '#dc2626' },
+  { name: 'Rose', value: '#da5b85ff' },
+  { name: 'Orange', value: '#ff9800' },
+  { name: 'Doré', value: '#ffc107' },
+  
+  // Froides
+  { name: 'Pourpre', value: '#6a1b9a' },
+  { name: 'Lavande', value: '#b39ddb' },
+  { name: 'Indigo', value: '#3949ab' },
+  { name: 'Bleu', value: '#1976d2' },
+  { name: 'Cyan', value: '#0097a7' },
+  
+  // Vertes et neutres
+  { name: 'Olive', value: '#827717' },
+  { name: 'Vert', value: '#388e3c' },
+  { name: 'Marron', value: '#5d4037' },
+  { name: 'Gris', value: '#616161' },
+  { name: 'Anthracite', value: '#37474f' },
 ];
 
 export const DEFAULT_COLOR = '#3498db';

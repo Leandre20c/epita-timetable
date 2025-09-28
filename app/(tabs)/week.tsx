@@ -242,7 +242,11 @@ export default function WeekScreen() {
                         </Text>
                         
                         {day.events.map((event, index) => (
-                          <EventCard key={event.id || `event-${index}`} event={event} />
+                          <EventCard 
+                            key={event.id || `event-${index}`} 
+                            event={event} 
+                            variant="compact" // elevation: 0 pour vue week
+                          />
                         ))}
                       </View>
                     );
@@ -254,7 +258,7 @@ export default function WeekScreen() {
         </GestureDetector>
         
         <LinearGradient
-          colors={['transparent', COLORS.background]}
+          colors={['transparent', COLORS.light.background]}
           style={screenStyles.tabBarFadeOverlay}
           pointerEvents="none"
         />

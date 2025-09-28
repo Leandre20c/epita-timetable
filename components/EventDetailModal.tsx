@@ -118,7 +118,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
     if (currentTime >= startTime && currentTime <= endTime) {
       return { text: 'En cours', color: COLORS.danger };
     } else if (currentTime > endTime) {
-      return { text: 'Terminé', color: COLORS.text.secondary };
+      return { text: 'Terminé', color: COLORS.light.text.secondary };
     } else {
       const diffToStart = startTime - currentTime;
       const diffMinutes = Math.round(diffToStart / 60000);
@@ -130,37 +130,13 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
       } else if (diffHours < 24) {
         return { text: `Dans ${diffHours}h`, color: COLORS.primary };
       } else {
-        return { text: `Dans ${diffDays}j`, color: COLORS.text.secondary };
+        return { text: `Dans ${diffDays}j`, color: COLORS.light.text.secondary };
       }
     }
-  };
-
-  // Helper functions pour détecter le mot-clé
-  const extractKeywords = (title: string): string[] => {
-    return title
-      .toLowerCase()
-      .trim()
-      .split(/[\s\-_()[\]{}.,;:!?]+/)
-      .filter(word => word.length > 1);
-  };
-
-  const findMainKeyword = (title: string): string | null => {
-    const keywords = extractKeywords(title);
-    const importantKeywords = [
-      'qcm', 'examen', 'exam', 'controle', 'partiel', 'test', 'rattrapage',
-      'tp', 'td', 'cm', 'cours', 'projet', 'stage', 'soutenance'
-    ];
-
-    for (const keyword of keywords) {
-      if (importantKeywords.includes(keyword)) {
-        return keyword.toUpperCase();
-      }
-    }
-    return null;
   };
 
   const status = getEventStatus();
-  const mainKeyword = findMainKeyword(event.summary);
+  const mainKeyword = SubjectColorService.getMainKeyword(event.summary);
 
   return (
     <Modal
@@ -173,7 +149,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
         {/* Header */}
         <View style={modalStyles.modalHeader}>
           <TouchableOpacity onPress={onClose} style={modalStyles.modalCloseButton}>
-            <X size={24} color={COLORS.text.primary} />
+            <X size={24} color={COLORS.light.text.primary} />
           </TouchableOpacity>
           <Text style={modalStyles.modalHeaderTitle}>Détails du cours</Text>
           <View style={styles.placeholder} />
@@ -191,12 +167,12 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
           {/* Informations principales */}
           <View style={[modalStyles.section, { marginTop: 0, gap: SPACING.md }]}>
             <View style={modalStyles.infoRow}>
-              <Calendar size={20} color={COLORS.text.secondary} />
+              <Calendar size={20} color={COLORS.light.text.secondary} />
               <Text style={modalStyles.infoText}>{formatEventDate(event.startTime)}</Text>
             </View>
 
             <View style={modalStyles.infoRow}>
-              <Clock size={20} color={COLORS.text.secondary} />
+              <Clock size={20} color={COLORS.light.text.secondary} />
               <Text style={modalStyles.infoText}>
                 {ICSParser.formatTime(event.startTime)} - {ICSParser.formatTime(event.endTime)}
               </Text>
@@ -205,7 +181,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
 
             {event.location && (
               <View style={modalStyles.infoRow}>
-                <MapPin size={20} color={COLORS.text.secondary} />
+                <MapPin size={20} color={COLORS.light.text.secondary} />
                 <Text style={modalStyles.infoText}>{event.location}</Text>
               </View>
             )}
@@ -223,8 +199,8 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
           <View style={[styles.actionsSection]}>
             {/* Notification (pour plus tard) */}
             <TouchableOpacity style={modalStyles.actionButton} disabled>
-              <Bell size={20} color={COLORS.text.secondary} />
-              <Text style={[modalStyles.actionText, { color: COLORS.text.secondary }]}>
+              <Bell size={20} color={COLORS.light.text.secondary} />
+              <Text style={[modalStyles.actionText, { color: COLORS.light.text.secondary }]}>
                 Ajouter une notification
               </Text>
               <Text style={styles.comingSoon}>(Bientôt)</Text>
@@ -306,12 +282,12 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.text.primary,
+    color: COLORS.light.text.primary,
     marginBottom: SPACING.sm
   },
   duration: {
     fontSize: 14,
-    color: COLORS.text.secondary
+    color: COLORS.light.text.secondary
   },
   actionsSection: {
     margin: SPACING.lg,
@@ -320,7 +296,7 @@ const styles = StyleSheet.create({
   },
   comingSoon: {
     fontSize: 12,
-    color: COLORS.text.secondary,
+    color: COLORS.light.text.secondary,
     fontStyle: 'italic'
   },
   colorPreview: {
@@ -328,11 +304,11 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.light.border,
     marginLeft: SPACING.sm
   },
   keywordInfo: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.light.background,
     marginTop: SPACING.sm,
     padding: SPACING.sm,
     borderRadius: 8,
@@ -343,7 +319,7 @@ const styles = StyleSheet.create({
   },
   keywordText: {
     fontSize: 14,
-    color: COLORS.text.secondary,
+    color: COLORS.light.text.secondary,
     textAlign: 'center'
   },
   keywordHighlight: {
@@ -356,6 +332,6 @@ const styles = StyleSheet.create({
   },
   cancelColorText: {
     fontSize: 16,
-    color: COLORS.text.secondary
+    color: COLORS.light.text.secondary
   }
 });

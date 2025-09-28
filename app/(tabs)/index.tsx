@@ -266,10 +266,12 @@ export default function DayScreen() {
                       <EventCard 
                         key={shouldRefresh ? `${eventKey}-${refreshTrigger}` : eventKey}
                         event={event}
+                        variant="default" // elevation: 3 pour vue index
                         onColorChanged={(eventId) => {
-                          setExcludeFromRefresh(eventId);
+                          if (eventId) {
+                            setExcludeFromRefresh(eventId);
+                          }
                           setRefreshTrigger(prev => prev + 1);
-                          // Réinitialiser l'exclusion après un délai
                           setTimeout(() => setExcludeFromRefresh(null), 1000);
                         }}
                       />
@@ -281,7 +283,7 @@ export default function DayScreen() {
           </Animated.View>
         </GestureDetector>
         <LinearGradient
-          colors={['transparent', COLORS.background]}
+          colors={['transparent', COLORS.light.background]}
           style={screenStyles.tabBarFadeOverlay}
           pointerEvents="none"
         />

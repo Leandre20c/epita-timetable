@@ -1,8 +1,13 @@
-// services/SubjectColorService.ts - Fix de la logique de recherche
+// services/SubjectColorService.ts - Version nettoyée
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_COLOR, SUBJECT_COLORS } from '../config/subjectColors';
 
 const STORAGE_KEY = 'subject_colors';
+
+// Liste unique des mots-clés importants
+const IMPORTANT_KEYWORDS = [
+  'qcm', 'examen', 'exam', 'controle', 'partiel', 'test', 'rattrapage', 'projet', 'stage', 'soutenance'
+];
 
 class SubjectColorService {
   private static instance: SubjectColorService;
@@ -60,45 +65,43 @@ class SubjectColorService {
       .filter(word => word.length > 1);
   }
 
+  private findMainKeyword(title: string): string | null {
+    const keywords = this.extractKeywords(title);
+    
+    // Chercher le premier mot-clé important trouvé
+    for (const keyword of keywords) {
+      if (IMPORTANT_KEYWORDS.includes(keyword)) {
+        return keyword;
+      }
+    }
+    
+    return null;
+  }
+
   private findColorByKeywords(title: string): string | null {
     console.log(`Recherche couleur pour: "${title}"`);
-    console.log('Couleurs disponibles:', Object.keys(this.colors));
     
-    const titleLower = title.toLowerCase();
     const keywords = this.extractKeywords(title);
     console.log('Mots-clés extraits:', keywords);
     
-    // 1. PRIORITÉ : Recherche par mots-clés importants D'ABORD
-    const importantKeywords = [
-      'qcm', 'examen', 'exam', 'controle', 'partiel', 'test', 'rattrapage',
-      'tp', 'td', 'cm', 'cours', 'projet', 'stage', 'soutenance'
-    ];
-
+    // 1. PRIORITÉ : Recherche par mots-clés importants
     for (const keyword of keywords) {
-      if (importantKeywords.includes(keyword)) {
-        // Chercher ce mot-clé dans les couleurs configurées
+      if (IMPORTANT_KEYWORDS.includes(keyword)) {
         if (this.colors[keyword]) {
           console.log(`✅ Trouvé mot-clé important "${keyword}": ${this.colors[keyword]}`);
           return this.colors[keyword];
         }
-        
-        // Chercher dans les clés existantes
-        for (const [subject, color] of Object.entries(this.colors)) {
-          if (subject.toLowerCase() === keyword) {
-            console.log(`✅ Trouvé mot-clé important dans clés "${keyword}": ${color}`);
-            return color;
-          }
-        }
       }
     }
 
-    // 2. Recherche exacte (titre complet) SEULEMENT SI pas de mot-clé important
+    // 2. Recherche exacte (titre complet)
     if (this.colors[title]) {
       console.log(`✅ Trouvé exact: ${this.colors[title]}`);
       return this.colors[title];
     }
     
     // 3. Recherche exacte insensible à la casse
+    const titleLower = title.toLowerCase();
     for (const [subject, color] of Object.entries(this.colors)) {
       if (subject.toLowerCase() === titleLower) {
         console.log(`✅ Trouvé exact (case insensitive): ${color}`);
@@ -134,42 +137,22 @@ class SubjectColorService {
 
   async setColorForSubject(subjectName: string, color: string): Promise<void> {
     try {
-      console.log(`💾 AVANT - Couleurs:`, this.colors);
+      console.log(`💾 Sauvegarde couleur pour: "${subjectName}" → ${color}`);
       
       const normalizedName = subjectName.trim();
-      const keywords = this.extractKeywords(normalizedName);
+      const mainKeyword = this.findMainKeyword(normalizedName);
       
-      // Trouver le mot-clé principal
-      const importantKeywords = [
-        'qcm', 'examen', 'exam', 'controle', 'partiel', 'test', 'rattrapage', 'projet',
-        'stage', 'soutenance', 'QCM', 'Examen', 'Exam', 'Controle', 'Partiel', 'Test', 'Rattrapage',
-      ];
-
-      let keyToUse = normalizedName; // Par défaut, utiliser le nom complet
-      let foundImportantKeyword = false;
-
-      // Priorité aux mots-clés importants
-      for (const keyword of keywords) {
-        if (importantKeywords.includes(keyword)) {
-          keyToUse = keyword;
-          foundImportantKeyword = true;
-          console.log(`🎯 Utilisation du mot-clé: "${keyword}"`);
-          break;
-        }
-      }
-
-      // Si on utilise un mot-clé important, supprimer les anciennes entrées spécifiques
-      if (foundImportantKeyword) {
-        // Supprimer l'entrée spécifique pour éviter les conflits
-        if (this.colors[normalizedName]) {
-          console.log(`🗑️ Suppression de l'entrée spécifique: "${normalizedName}"`);
-          delete this.colors[normalizedName];
-        }
+      let keyToUse: string;
+      
+      if (mainKeyword) {
+        // Utiliser le mot-clé principal
+        keyToUse = mainKeyword;
+        console.log(`🎯 Utilisation du mot-clé: "${mainKeyword}"`);
         
-        // Supprimer toutes les entrées qui contiennent ce mot-clé pour éviter les doublons
+        // Supprimer les anciennes entrées spécifiques qui contiennent ce mot-clé
         const toDelete: string[] = [];
         for (const [subject] of Object.entries(this.colors)) {
-          if (subject !== keyToUse && this.extractKeywords(subject).includes(keyToUse)) {
+          if (subject !== keyToUse && this.extractKeywords(subject).includes(mainKeyword)) {
             toDelete.push(subject);
           }
         }
@@ -178,6 +161,10 @@ class SubjectColorService {
           console.log(`🗑️ Suppression de l'entrée en conflit: "${key}"`);
           delete this.colors[key];
         });
+      } else {
+        // Pas de mot-clé important, utiliser le nom complet
+        keyToUse = normalizedName;
+        console.log(`📝 Utilisation du nom complet: "${normalizedName}"`);
       }
 
       // Sauvegarder avec la clé choisie
@@ -192,15 +179,20 @@ class SubjectColorService {
       }
 
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(customColors));
-      console.log(`💾 AsyncStorage:`, customColors);
+      console.log(`✅ Couleur sauvegardée: ${keyToUse} → ${color}`);
       
-      // Notifier immédiatement
+      // Notifier les listeners
       this.notifyListeners();
       
     } catch (error) {
-      console.error('Erreur sauvegarde couleur:', error);
+      console.error('❌ Erreur sauvegarde couleur:', error);
       throw error;
     }
+  }
+
+  // Méthode publique pour obtenir le mot-clé principal (utile pour l'UI)
+  getMainKeyword(title: string): string | null {
+    return this.findMainKeyword(title);
   }
 
   getAllColors(): { [key: string]: string } {

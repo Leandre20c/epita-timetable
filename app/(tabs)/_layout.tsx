@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TabBarIcon from '../../components/navigation/TabBarIcon';
 import { COLORS } from '../../styles/screenStyles';
 
+import { FEATURES } from '../../config/feature';
+
 // Types pour une meilleure type safety
 interface TabBarIconProps {
   color: string;
@@ -15,12 +17,13 @@ export default function TabLayout() {
 
   // Optimisation des performances avec useMemo
   const screenOptions = useMemo(() => ({
-    tabBarActiveTintColor: COLORS.primary,
-    tabBarInactiveTintColor: COLORS.secondary,
+    // Couleurs des tabs : bleu pour actif, gris neutre pour inactif
+    tabBarActiveTintColor: COLORS.primary, // Bleu #102B65 pour tab active
+    tabBarInactiveTintColor: COLORS.light.text.secondary, // Gris neutre pour tabs inactives
     headerShown: false,
     tabBarStyle: {
-      backgroundColor: COLORS.cardBackground,
-      borderRadius: 2500, // make it round
+      backgroundColor: COLORS.light.cardBackground, // Blanc pur pour la tab bar
+      borderRadius: 25, // Coins arrondis pour un look moderne
       marginHorizontal: 20,
       marginBottom: insets.bottom + 10,
       paddingTop: 8,
@@ -28,17 +31,22 @@ export default function TabLayout() {
       height: 70,
       position: 'absolute' as const,
       borderWidth: 0,
-      elevation: 3,
+      elevation: 5, // Ombre plus prononcée pour faire "flotter"
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
     },
-    tabBarLabelStyle: { // labels
+    tabBarLabelStyle: {
       fontSize: 12,
       fontWeight: '600' as const,
       marginBottom: 4,
     },
-    tabBarItemStyle: { // icons
+    tabBarItemStyle: {
       borderRadius: 20,
       marginHorizontal: 4,
       paddingVertical: 4,
+      // L'item actif aura un background bleu très clair automatiquement
     },
   }), [insets.bottom]);
 
@@ -71,15 +79,17 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profil',
-          tabBarIcon: ({ color }: TabBarIconProps) => (
-            <TabBarIcon name="profile" color={color} />
-          ),
-        }}
-      />
+      {FEATURES.PROFILE_TAB && (
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: 'Profil',
+            tabBarIcon: ({ color }: TabBarIconProps) => (
+              <TabBarIcon name="profile" color={color} />
+            ),
+          }}
+        />
+      )}
     </Tabs>
   );
 }

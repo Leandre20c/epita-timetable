@@ -4,17 +4,19 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ICSParser } from '../services/ICSParser';
 import SubjectColorService from '../services/SubjectColorService';
-import { COLORS, screenStyles, SPACING } from '../styles/screenStyles';
+import { COLORS, SPACING } from '../styles/screenStyles';
 import { CalendarEvent } from '../types/CalendarTypes';
 import { EventDetailModal } from './EventDetailModal';
 
 interface EventCardProps {
   event: CalendarEvent;
-  onColorChanged?: (eventId?: string) => void; // Ajouter le paramètre optionnel
+  variant?: 'default' | 'compact'; // 'default' pour index (elevation 3), 'compact' pour week (elevation 0)
+  onColorChanged?: (eventId?: string) => void;
 }
 
 export const EventCard: React.FC<EventCardProps> = React.memo(({ 
   event, 
+  variant = 'default',
   onColorChanged 
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -107,17 +109,20 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({
     };
   }, [event.startTime, event.endTime, event.summary, colorKey]); // colorKey force le recalcul
 
-  // Style de la carte mémorisé
+  // Style de la carte mémorisé avec variant
   const cardStyle = useMemo(() => {
+    // Choisir le style de base selon le variant
+    const baseCardStyle = variant === 'compact' ? styles.compactCard : styles.defaultCard;
+    
     const style = [
-      screenStyles.eventCard,
+      baseCardStyle,
       { borderLeftColor: eventData.subjectColor },
       eventData.isCurrentEvent && styles.currentEvent,
       eventData.isUpcoming && styles.upcomingEvent
     ];
-    console.log(`🎨 Style appliqué avec couleur: ${eventData.subjectColor}`);
+    console.log(`🎨 Style appliqué avec couleur: ${eventData.subjectColor} (variant: ${variant})`);
     return style;
-  }, [eventData.subjectColor, eventData.isCurrentEvent, eventData.isUpcoming]);
+  }, [eventData.subjectColor, eventData.isCurrentEvent, eventData.isUpcoming, variant]);
 
   const handleCardPress = () => {
     setIsModalVisible(true);
@@ -125,7 +130,6 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({
 
   const handleColorChanged = () => {
     console.log('Couleur changée pour:', event.summary);
-    // Passer l'ID de cet événement pour l'exclure du re-render
     onColorChanged?.(event.id || event.summary);
   };
 
@@ -142,8 +146,8 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({
         onPress={handleCardPress}
         activeOpacity={0.7}
       >
-        <View style={screenStyles.eventCardContent}>
-          <Text style={screenStyles.eventTitle} numberOfLines={2}>
+        <View style={styles.cardContent}>
+          <Text style={styles.eventTitle} numberOfLines={2}>
             {event.summary}
           </Text>
           <Text style={[
@@ -156,8 +160,8 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({
         
         <View style={styles.details}>
           <View style={styles.timeContainer}>
-            <Text style={screenStyles.eventTime}>
-              <Clock size={15} color="#7f8c8d" /> {eventData.startTimeFormatted} - {eventData.endTimeFormatted}
+            <Text style={styles.eventTime}>
+              <Clock size={15} color={COLORS.primary} /> {eventData.startTimeFormatted} - {eventData.endTimeFormatted}
             </Text>
             <Text style={styles.duration}>
               ({eventData.duration})
@@ -165,8 +169,8 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({
           </View>
           
           {event.location && (
-            <Text style={screenStyles.eventLocation} numberOfLines={1}>
-              <MapPin size={15} color="#7f8c8d" /> {event.location}
+            <Text style={styles.eventLocation} numberOfLines={1}>
+              <MapPin size={15} color={COLORS.light.text.secondary} /> {event.location}
             </Text>
           )}
           
@@ -193,40 +197,102 @@ EventCard.displayName = 'EventCard';
 
 // Styles spécifiques à EventCard
 const styles = StyleSheet.create({
+  // Style par défaut (pour index) - avec elevation
+  defaultCard: {
+    backgroundColor: COLORS.light.cardBackground,
+    borderRadius: 12,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 3, // Elevation pour vue index
+    borderLeftWidth: 4,
+  },
+  
+  // Style compact (pour week/month) - sans elevation
+  compactCard: {
+    backgroundColor: COLORS.light.cardBackground,
+    borderRadius: 12,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 0, // Pas d'elevation pour vues week/month
+    borderLeftWidth: 4,
+  },
+  
+  cardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: SPACING.sm,
+  },
+  
+  eventTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.light.text.primary,
+    flex: 1,
+    marginRight: SPACING.sm,
+    lineHeight: 22,
+  },
+  
+  eventTime: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary, // Bleu pour l'heure (info importante)
+  },
+  
+  eventLocation: {
+    fontSize: 13,
+    color: COLORS.light.text.secondary,
+  },
+  
   currentEvent: {
-    backgroundColor: '#fff5f5',
+    backgroundColor: COLORS.blue[50], // Background bleu très clair
   },
+  
   upcomingEvent: {
-    backgroundColor: '#fffbf0',
+    backgroundColor: COLORS.blue[50], // Background bleu très clair
   },
+  
   status: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.text.secondary,
-    backgroundColor: COLORS.background,
+    color: COLORS.light.text.secondary,
+    backgroundColor: COLORS.light.surface,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
     borderRadius: 12,
   },
+  
   currentStatus: {
     backgroundColor: COLORS.danger,
     color: '#ffffff',
   },
+  
   details: {
     gap: 6,
   },
+  
   timeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  
   duration: {
     fontSize: 12,
-    color: COLORS.text.secondary,
+    color: COLORS.light.text.secondary,
     marginLeft: SPACING.sm,
   },
+  
   description: {
     fontSize: 13,
-    color: COLORS.text.secondary,
+    color: COLORS.light.text.secondary,
     lineHeight: 18,
     marginTop: SPACING.xs,
   },
