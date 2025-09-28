@@ -28,13 +28,10 @@ v1.1.0
 
 #### Android
 1. **Installation directe (Recommandée)**
-   - Ouvrez ce lien sur votre téléphone : [Télécharger EPITA Timetable](https://expo.dev/accounts/leandre20c/projects/epita-timetable/builds/4ce00e16-1f2b-47f5-b91c-86000387b29b)
-   - Téléchargez le fichier APK
+   - Rendez-vous dans [Releases](../../releases)
+   - Téléchargez le fichier APK de la dernière version (en haut du README)
    - Autorisez l'installation depuis "Sources inconnues" dans vos paramètres
    - Installez l'application
-
-2. **Via QR Code**
-   - Scannez le QR Code disponible dans les [Releases](../../releases)
 
 #### iOS
 *Version iOS en développement*
