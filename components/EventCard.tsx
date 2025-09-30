@@ -27,7 +27,6 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({
     const unsubscribe = SubjectColorService.addListener(() => {
       // Forcer immédiatement le re-render en changeant la clé
       setColorKey(prev => prev + 1);
-      console.log('🔄 EventCard re-render forcé pour:', event.summary);
     });
 
     return unsubscribe;
@@ -38,13 +37,11 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({
     if (!isModalVisible) {
       // Le modal vient de se fermer, forcer la mise à jour de la couleur
       setColorKey(prev => prev + 1);
-      console.log('🔄 Modal fermé, mise à jour couleur pour:', event.summary);
     }
   }, [isModalVisible, event.summary]);
 
   // Mémoisation des calculs coûteux
   const eventData = useMemo(() => {
-    console.log(`🎨 Calcul couleur pour "${event.summary}" (key: ${colorKey})`);
     
     const now = new Date();
     const startTime = event.startTime.getTime();
@@ -92,7 +89,6 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({
 
     // Couleur de la matière (TOUJOURS recalculée grâce à colorKey)
     const subjectColor = SubjectColorService.getColorBySubjectName(event.summary);
-    console.log(`🎨 Couleur calculée: ${subjectColor} pour "${event.summary}"`);
 
     // Formatage des heures
     const startTimeFormatted = ICSParser.formatTime(event.startTime);
@@ -120,7 +116,6 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({
       eventData.isCurrentEvent && styles.currentEvent,
       eventData.isUpcoming && styles.upcomingEvent
     ];
-    console.log(`🎨 Style appliqué avec couleur: ${eventData.subjectColor} (variant: ${variant})`);
     return style;
   }, [eventData.subjectColor, eventData.isCurrentEvent, eventData.isUpcoming, variant]);
 
@@ -129,12 +124,10 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({
   };
 
   const handleColorChanged = () => {
-    console.log('Couleur changée pour:', event.summary);
     onColorChanged?.(event.id || event.summary);
   };
 
   const handleModalClose = () => {
-    console.log('Modal fermé, forcing color update pour:', event.summary);
     setIsModalVisible(false);
     setColorKey(prev => prev + 1);
   };

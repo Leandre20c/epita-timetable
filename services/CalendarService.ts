@@ -1,15 +1,33 @@
 // services/CalendarService.ts
-import { CalendarEvent, DaySchedule, MonthSchedule, WeekSchedule } from '../types/CalendarTypes';
+import { CalendarEvent, DaySchedule, WeekSchedule } from '../types/CalendarTypes';
 import { ICSParser } from './ICSParser';
+import { UserPreferencesService } from './UserPreferencesService';
 
 export class CalendarService {
-  private static readonly ICS_URL = 'https://zeus.ionis-it.com/api/group/203/ics/q2GXJsFwfL?startDate=2025-09-01';
+  // URL de l'ICS global contenant TOUS les groupes
+  private static readonly ICS_BASE_URL = 'https://zeus.ionis-it.com/api/group/1/ics/q2GXJsFwfL';
+  
+  // Fallback vers ton ancien lien si aucun groupe n'est sélectionné
+  private static readonly FALLBACK_ICS_URL = 'https://zeus.ionis-it.com/api/group/203/ics/q2GXJsFwfL?startDate=2025-09-01';
+  
   private static cachedEvents: CalendarEvent[] | null = null;
   private static lastFetch: number = 0;
   private static readonly CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+  private static currentGroupId: string | null = null;
 
+  /**
+   * Fetch et filtre les événements selon le groupe sélectionné
+   */
   public static async fetchSchedule(): Promise<CalendarEvent[]> {
     const now = Date.now();
+    const selectedGroup = await UserPreferencesService.getSelectedGroup();
+    
+    // Invalider le cache si le groupe a changé
+    if (selectedGroup !== this.currentGroupId) {
+      console.log('🔄 Groupe changé, invalidation du cache');
+      this.cachedEvents = null;
+      this.currentGroupId = selectedGroup;
+    }
     
     // Return cached data if still valid
     if (this.cachedEvents && (now - this.lastFetch) < this.CACHE_DURATION) {
@@ -20,10 +38,14 @@ export class CalendarService {
     try {
       console.log('🔄 Chargement des événements depuis l\'API...');
       
+      // Choisir l'URL selon si un groupe est sélectionné
+      const icsUrl = selectedGroup ? this.ICS_BASE_URL : this.FALLBACK_ICS_URL;
+      console.log('🌐 URL utilisée:', icsUrl);
+      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
       
-      const response = await fetch(this.ICS_URL, {
+      const response = await fetch(icsUrl, {
         method: 'GET',
         signal: controller.signal,
         headers: {
@@ -49,7 +71,16 @@ export class CalendarService {
         throw new Error('Format ICS invalide');
       }
       
-      this.cachedEvents = ICSParser.parseICS(icsContent);
+      let allEvents = ICSParser.parseICS(icsContent);
+      
+      // Filtrer par groupe si un groupe est sélectionné
+      if (selectedGroup) {
+        console.log(`🔍 Filtrage des événements pour le groupe: ${selectedGroup}`);
+        allEvents = this.filterEventsByGroup(allEvents, selectedGroup);
+        console.log(`✅ ${allEvents.length} événements après filtrage`);
+      }
+      
+      this.cachedEvents = allEvents;
       this.lastFetch = now;
       
       console.log(`✅ ${this.cachedEvents.length} événements chargés avec succès`);
@@ -64,10 +95,39 @@ export class CalendarService {
         return this.cachedEvents;
       }
       
-      // Return empty array instead of throwing to prevent app crash
       console.log('📭 Retour d\'un tableau vide');
       return [];
     }
+  }
+
+  /**
+   * Filtre les événements pour ne garder que ceux du groupe spécifié
+   */
+  private static filterEventsByGroup(events: CalendarEvent[], groupId: string): CalendarEvent[] {
+    return events.filter(event => {
+      const text = `${event.summary || ''} ${event.description || ''}`;
+      // Cherche le groupId dans le texte de l'événement
+      return text.toUpperCase().includes(groupId.toUpperCase());
+    });
+  }
+
+  /**
+   * Force le rechargement des événements (utile après changement de groupe)
+   */
+  public static async refreshSchedule(): Promise<CalendarEvent[]> {
+    this.cachedEvents = null;
+    this.lastFetch = 0;
+    return this.fetchSchedule();
+  }
+
+  /**
+   * Invalide le cache (utile après changement de groupe)
+   */
+  public static clearCache(): void {
+    this.cachedEvents = null;
+    this.lastFetch = 0;
+    this.currentGroupId = null;
+    console.log('🗑️ Cache du calendrier invalidé');
   }
 
   // Méthode pour récupérer les événements d'un jour spécifique
@@ -121,7 +181,6 @@ export class CalendarService {
           ICSParser.isSameDay(event.startTime, currentDate)
         );
         
-        // FIX: Éviter les problèmes de timezone en formatant manuellement
         const dateString = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
         
         weekSchedule.push({
@@ -150,117 +209,44 @@ export class CalendarService {
       for (let i = 0; i < 7; i++) {
         const currentDate = new Date(weekStart);
         currentDate.setDate(weekStart.getDate() + i);
-
-        console.log(`Jour ${i}: ${currentDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' })}`);
         
         const dayEvents = events.filter(event => 
           ICSParser.isSameDay(event.startTime, currentDate)
         );
         
+        const dateString = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+        
         days.push({
-          date: `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`,
+          date: dateString,
           events: dayEvents
         });
       }
       
+      const weekLabel = `${weekStart.getDate()} ${this.getMonthName(weekStart)} - ${weekEnd.getDate()} ${this.getMonthName(weekEnd)} ${weekEnd.getFullYear()}`;
+      
       return {
-        weekStart,
-        weekEnd,
+        weekStart: weekStart.toISOString(),
+        weekEnd: weekEnd.toISOString(),
+        weekLabel,
         days
       };
     } catch (error) {
       console.error('Erreur getWeekSchedule:', error);
-      const weekStart = this.getWeekStart(weekStartDate);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-      
       return {
-        weekStart,
-        weekEnd,
-        days: Array.from({ length: 7 }, (_, i) => {
-          const date = new Date(weekStart);
-          date.setDate(weekStart.getDate() + i);
-          return {
-            date: date.toISOString().split('T')[0],
-            events: []
-          };
-        })
+        weekStart: weekStartDate.toISOString(),
+        weekEnd: weekStartDate.toISOString(),
+        weekLabel: '',
+        days: []
       };
     }
   }
 
-  // Navigation par mois
-  public static async getMonthSchedule(monthDate: Date): Promise<MonthSchedule> {
-    try {
-      const events = await this.fetchSchedule();
-      const year = monthDate.getFullYear();
-      const month = monthDate.getMonth();
-      
-      // Premier jour du mois
-      const monthStart = new Date(year, month, 1);
-      // Dernier jour du mois
-      const monthEnd = new Date(year, month + 1, 0);
-      
-      // Événements du mois
-      const monthEvents = events.filter(event => {
-        const eventDate = event.startTime;
-        return eventDate.getFullYear() === year && eventDate.getMonth() === month;
-      });
-      
-      // Générer les semaines du mois
-      const weeks: WeekSchedule[] = [];
-      const firstWeekStart = this.getWeekStart(monthStart);
-      
-      let currentWeekStart = new Date(firstWeekStart);
-      
-      while (currentWeekStart <= monthEnd) {
-        const weekSchedule = await this.getWeekSchedule(currentWeekStart);
-        
-        // Ne garder que si la semaine touche le mois courant
-        const weekTouchesMonth = weekSchedule.days.some(day => {
-          const dayDate = new Date(day.date + 'T00:00:00');
-          return dayDate.getMonth() === month && dayDate.getFullYear() === year;
-        });
-        
-        if (weekTouchesMonth) {
-          weeks.push(weekSchedule);
-        }
-        
-        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-      }
-      
-      return {
-        month,
-        year,
-        weeks,
-        events: monthEvents
-      };
-    } catch (error) {
-      console.error('Erreur getMonthSchedule:', error);
-      return {
-        month: monthDate.getMonth(),
-        year: monthDate.getFullYear(),
-        weeks: [],
-        events: []
-      };
-    }
-  }
-
-  // Utilitaires de navigation
+  // Helper methods
   public static getWeekStart(date: Date): Date {
-    const weekStart = new Date(date);
-    const dayOfWeek = weekStart.getDay();
-
-    const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    weekStart.setDate(weekStart.getDate() - mondayOffset);
-    weekStart.setHours(0, 0, 0, 0);
-    return weekStart;
-}
-
-  public static getPreviousWeek(currentWeekStart: Date): Date {
-    const previousWeek = new Date(currentWeekStart);
-    previousWeek.setDate(currentWeekStart.getDate() - 7);
-    return previousWeek;
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
   }
 
   public static getNextWeek(currentWeekStart: Date): Date {
@@ -269,80 +255,14 @@ export class CalendarService {
     return nextWeek;
   }
 
-  public static getPreviousMonth(currentDate: Date): Date {
-    const previousMonth = new Date(currentDate);
-    previousMonth.setMonth(currentDate.getMonth() - 1);
-    return previousMonth;
+  public static getPreviousWeek(currentWeekStart: Date): Date {
+    const previousWeek = new Date(currentWeekStart);
+    previousWeek.setDate(currentWeekStart.getDate() - 7);
+    return previousWeek;
   }
 
-  public static getNextMonth(currentDate: Date): Date {
-    const nextMonth = new Date(currentDate);
-    nextMonth.setMonth(currentDate.getMonth() + 1);
-    return nextMonth;
+  private static getMonthName(date: Date): string {
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    return months[date.getMonth()];
   }
-
-  // Formatage des périodes
-  public static formatWeekPeriod(weekStart: Date, weekEnd: Date): string {
-    try {
-      const startStr = weekStart.toLocaleDateString('fr-FR', { 
-        day: 'numeric', 
-        month: 'short' 
-      });
-      const endStr = weekEnd.toLocaleDateString('fr-FR', { 
-        day: 'numeric', 
-        month: 'short',
-        year: 'numeric'
-      });
-      
-      if (weekStart.getMonth() === weekEnd.getMonth()) {
-        return `${weekStart.getDate()}-${endStr}`;
-      } else {
-        return `${startStr} - ${endStr}`;
-      }
-    } catch (error) {
-      return 'Semaine';
-    }
-  }
-
-  public static formatMonthPeriod(date: Date): string {
-    try {
-      return date.toLocaleDateString('fr-FR', { 
-        month: 'long', 
-        year: 'numeric' 
-      });
-    } catch (error) {
-      return 'Mois';
-    }
-  }
-
-  // Limitations de navigation (optionnel)
-  public static canNavigateToPreviousWeek(currentWeekStart: Date): boolean {
-    const minDate = new Date();
-    minDate.setFullYear(minDate.getFullYear() - 1); // 1 an en arrière max
-    return currentWeekStart > minDate;
-  }
-
-  public static canNavigateToNextWeek(currentWeekStart: Date): boolean {
-    const maxDate = new Date();
-    maxDate.setFullYear(maxDate.getFullYear() + 1); // 1 an en avant max
-    return currentWeekStart < maxDate;
-  }
-
-  public static canNavigateToPreviousMonth(currentDate: Date): boolean {
-    const minDate = new Date();
-    minDate.setFullYear(minDate.getFullYear() - 1);
-    return currentDate > minDate;
-  }
-
-  public static canNavigateToNextMonth(currentDate: Date): boolean {
-    const maxDate = new Date();
-    maxDate.setFullYear(maxDate.getFullYear() + 1);
-    return currentDate < maxDate;
-  }
-
-  public static clearCache(): void {
-    console.log('🗑️ Cache des événements effacé');
-    this.cachedEvents = null;
-    this.lastFetch = 0;
-  }
-}
+} 

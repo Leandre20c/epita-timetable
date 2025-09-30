@@ -36,7 +36,6 @@ export default function TabBarIcon({ name, color }: TabBarIconProps) {
         return <CalendarRange size={20} color="#495057" />;
       case 'profile':
         return <User size={20} color="#495057" />;
-        
       default:
         return <CalendarFold size={20} color="#495057" />;
     }

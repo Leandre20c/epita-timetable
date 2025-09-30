@@ -1,35 +1,64 @@
 // app/(tabs)/profile.tsx
+
 import React from 'react';
-import {
-    Text,
-    View
-} from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-
-import { screenStyles } from '../../styles/screenStyles';
-
-import { ArrowUpRight } from 'lucide-react-native';
-
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
-  return (
+  const handleTestAPI = async () => {
+    try {
+      console.log('🧪 Testing ZEUS API...');
+      
+      const response = await fetch('https://zeus.ionis-it.com/api/group/hierarchy');
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        console.error('❌ Failed:', response.status);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('✅ SUCCESS! Data:', JSON.stringify(data, null, 2));
+      
+    } catch (error) {
+      console.error('❌ Error:', error);
+    }
+  };
 
-    <SafeAreaProvider>
-        <SafeAreaView style={screenStyles.container}>
-            <View style={screenStyles.appHeader}>
-                <Text style={screenStyles.appTitle}>Epita TimeTable</Text>
-                <Text style={screenStyles.appSubtitle}>Version 1.0.0</Text>
-            </View>
-            <View style={screenStyles.profileHeader}>
-                <View style={screenStyles.profileTextContainer}>
-                    <Text style={screenStyles.profileTypeClass}>Rennes Spe</Text>
-                    <Text style={screenStyles.profileTypeGroup}>Groupe A</Text>
-                </View>
-                <View style={screenStyles.profileTypeSwitch}>
-                    <ArrowUpRight size={60} color="#ffffff" />
-                </View>
-            </View>
-        </SafeAreaView>
-  </SafeAreaProvider>
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Profil</Text>
+      
+      {/* Bouton de Test Temporaire */}
+      <TouchableOpacity 
+        style={styles.testButton} 
+        onPress={handleTestAPI}
+      >
+        <Text style={styles.testButtonText}>🧪 Test API ZEUS</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  testButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  testButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

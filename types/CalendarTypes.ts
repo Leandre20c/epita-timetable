@@ -16,8 +16,9 @@ export interface DaySchedule {
 }
 
 export interface WeekSchedule {
-  weekStart: Date;
-  weekEnd: Date;
+  weekStart: string;
+  weekEnd: string;
+  weekLabel: string;
   days: DaySchedule[];
 }
 
