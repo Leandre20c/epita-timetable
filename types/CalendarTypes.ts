@@ -1,17 +1,20 @@
 // types/CalendarTypes.ts
 export interface CalendarEvent {
-  title: string;
   id: string;
+  title: string;
   summary: string;
+  subject: string;      // ✅ Ajouté
+  type: string;         // ✅ Ajouté (TD, TP, CM, etc.)
   description?: string;
   location?: string;
-  startTime: Date;
-  endTime: Date;
+  startTime: Date;      // Garde startTime (pas start)
+  endTime: Date;        // Garde endTime (pas end)
+  color?: string;       // ✅ Ajouté
   allDay?: boolean;
 }
 
 export interface DaySchedule {
-  date: string; // Format YYYY-MM-DD
+  date: string;
   events: CalendarEvent[];
 }
 
@@ -23,7 +26,7 @@ export interface WeekSchedule {
 }
 
 export interface MonthSchedule {
-  month: number; // 0-11
+  month: number;
   year: number;
   weeks: WeekSchedule[];
   events: CalendarEvent[];

@@ -1,4 +1,4 @@
-// services/SubjectColorService.ts - Version nettoyée
+// services/SubjectColorService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_COLOR, SUBJECT_COLORS } from '../config/subjectColors';
 
@@ -197,6 +197,20 @@ class SubjectColorService {
 
   getAllColors(): { [key: string]: string } {
     return { ...this.colors };
+  }
+
+  /**
+   * Récupère la couleur pour une matière
+   */
+  static getColor(subject: string): string {
+    return this.getInstance().getColorBySubjectName(subject);
+  }
+
+  /**
+ * Récupère la couleur pour une matière (alias de getColor)
+ */
+  static getColorForSubject(subject: string): string {
+    return this.getColor(subject);
   }
 
   async resetColors(): Promise<void> {

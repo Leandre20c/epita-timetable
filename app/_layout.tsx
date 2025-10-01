@@ -5,20 +5,18 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
 import { useBackgroundNotifications } from '../hook/useBackgroundNotifications';
 import SubjectColorService from '../services/SubjectColorService';
 
 export default function RootLayout() {
-  // Créer une instance de QueryClient (une seule fois)
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000, // 1 minute - les données restent "fresh"
-        gcTime: 60 * 60 * 1000, // 1 heure - durée de conservation en cache
-        retry: 2, // Réessaye 2 fois en cas d'erreur
-        refetchOnWindowFocus: false, // Ne pas refetch quand l'app revient au premier plan
-        refetchOnMount: true, // Refetch au montage du composant
+        staleTime: 60 * 1000,
+        gcTime: 60 * 60 * 1000,
+        retry: 2,
+        refetchOnWindowFocus: false,
+        refetchOnMount: true,
       },
     },
   }));
@@ -42,8 +40,9 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar style="dark" />
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="login" />
         </Stack>
       </GestureHandlerRootView>
     </QueryClientProvider>
