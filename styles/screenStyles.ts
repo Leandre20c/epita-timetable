@@ -450,13 +450,29 @@ export const screenStyles = StyleSheet.create({
     paddingRight: 16,
   },
 
+  // Empty state when not logged in
+
+  loginButton: {
+    marginTop: 20,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
   // --- ÉTATS VIDES ---
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 80,
     paddingHorizontal: SPACING.xl,
     paddingBottom: 120,
+    position: 'relative' as const,
+    flex: 1,
   },
 
   emptyIcon: {

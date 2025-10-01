@@ -1,4 +1,6 @@
 // app/(tabs)/index.tsx
+
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -7,7 +9,7 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -15,25 +17,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EventCard } from '../../components/EventCard';
 import { useSwipeNavigation } from '../../hook/useSwipeNavigation';
+import { AuthService } from '../../services/AuthService';
 import { CalendarService } from '../../services/CalendarService';
 import { COLORS, screenStyles } from '../../styles/screenStyles';
 import { CalendarEvent } from '../../types/CalendarTypes';
-
-import { LinearGradient } from 'expo-linear-gradient';
+import EventEmitter from '../../utils/EventEmitter';
 
 export default function DayScreen() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
-
-  // Refresh on color changed
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [excludeFromRefresh, setExcludeFromRefresh] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   
-  // évenements préchargés pour les jours voisins
   const [preloadedEvents, setPreloadedEvents] = useState<{
-    [key: string]: CalendarEvent[]
+    [key: string]: CalendarEvent[];
   }>({});
 
   const formatDateKey = (date: Date): string => {
@@ -50,7 +50,6 @@ export default function DayScreen() {
     const previousKey = formatDateKey(previousDay);
     const nextKey = formatDateKey(nextDay);
 
-    // Précharger seulement si pas déjà en cache
     const preloadPromises = [];
     
     if (!preloadedEvents[previousKey]) {
@@ -69,7 +68,6 @@ export default function DayScreen() {
       );
     }
 
-    // Lancer les préchargements en arrière-plan
     Promise.all(preloadPromises).catch(error => 
       console.warn('Erreur préchargement:', error)
     );
@@ -101,7 +99,7 @@ export default function DayScreen() {
       setEvents([]);
     } finally {
       setIsLoading(false);
-      setIsTransitioning(false); // Arrêter le loading de transition
+      setIsTransitioning(false);
     }
   };
 
@@ -120,11 +118,58 @@ export default function DayScreen() {
   };
 
   useEffect(() => {
-    loadDayData(currentDate);
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const authenticated = await AuthService.isAuthenticated();
+    setIsAuthenticated(authenticated);
+    
+    if (authenticated) {
+      loadDayData(currentDate);
+    } else {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadDayData(currentDate);
+    }
+  }, [currentDate, isAuthenticated]);
+
+  useEffect(() => {
+    const handleAuthChange = async () => {
+      console.log('🔄 Auth changé, vérification...');
+      const authenticated = await AuthService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      
+      if (authenticated) {
+        setPreloadedEvents({});
+        await loadDayData(currentDate);
+      } else {
+        setEvents([]);
+      }
+    };
+
+    const handleGroupChange = async () => {
+      console.log('🔄 Groupe changé, rechargement...');
+      setPreloadedEvents({});
+      await loadDayData(currentDate);
+    };
+
+    EventEmitter.on('authChanged', handleAuthChange);
+    EventEmitter.on('groupChanged', handleGroupChange);
+
+    return () => {
+      EventEmitter.off('authChanged', handleAuthChange);
+      EventEmitter.off('groupChanged', handleGroupChange);
+    };
   }, [currentDate]);
 
   const handleRefresh = () => {
     CalendarService.clearCache();
+    setPreloadedEvents({});
     loadDayData(currentDate);
   };
 
@@ -136,7 +181,7 @@ export default function DayScreen() {
     onSwipeLeft: handleNext,
     onSwipeRight: handlePrevious,
     canSwipeLeft: true,
-    canSwipeRight: true
+    canSwipeRight: true,
   });
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -165,7 +210,7 @@ export default function DayScreen() {
       return currentDate.toLocaleDateString('fr-FR', {
         weekday: 'long',
         day: 'numeric',
-        month: 'long'
+        month: 'long',
       });
     } catch (error) {
       return 'Jour';
@@ -176,26 +221,18 @@ export default function DayScreen() {
     let totalMinutes = 0;
     
     for (let event of events) {
-      const start = event.startTime;
-      const end = event.endTime;
-      
-      // Calculer la différence en millisecondes puis convertir en minutes
-      const durationMs = end.getTime() - start.getTime();
+      const durationMs = event.endTime.getTime() - event.startTime.getTime();
       const durationMinutes = Math.round(durationMs / (1000 * 60));
-      
       totalMinutes += durationMinutes;
     }
     
     return totalMinutes;
   };
 
-  // Fonction pour formater les minutes en format lisible
   const formatTotalHours = (): string => {
     const totalMinutes = totalDayHours();
     
-    if (totalMinutes === 0) {
-      return 'Pas';
-    }
+    if (totalMinutes === 0) return 'Pas';
     
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
@@ -213,6 +250,31 @@ export default function DayScreen() {
     return currentDate.toDateString() === new Date().toDateString();
   };
 
+  if (isAuthenticated === null) {
+    return (
+      <SafeAreaView style={screenStyles.container}>
+        <View style={screenStyles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={screenStyles.loadingText}>Vérification...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={screenStyles.container}>
+        <View style={screenStyles.emptyContainer}>
+          <Text style={screenStyles.emptyIcon}>🔐</Text>
+          <Text style={screenStyles.emptyTitle}>Non connecté</Text>
+          <Text style={screenStyles.emptySubtitle}>
+            Connectez-vous pour accéder à votre emploi du temps
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   if (isLoading) {
     return (
       <SafeAreaView style={screenStyles.container}>
@@ -227,7 +289,6 @@ export default function DayScreen() {
   return (
     <View style={screenStyles.container}>
       <View style={{ flex: 1 }}>
-        {/* En-tête cliquable pour aller à aujourd'hui */}
         <TouchableOpacity 
           style={[screenStyles.dayHeader, isToday() && screenStyles.todayHeader]}
           onPress={handleToday}
@@ -241,11 +302,11 @@ export default function DayScreen() {
           </Text>
         </TouchableOpacity>
 
-        {/* Contenu avec swipe simple */}
         <GestureDetector gesture={panGesture}>
           <Animated.View style={[{ flex: 1 }, animatedStyle]}>
             <ScrollView
               style={screenStyles.scrollView}
+              contentContainerStyle={{ paddingBottom: 100 }}
               refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />}
             >
               {events.length === 0 ? (
@@ -253,7 +314,7 @@ export default function DayScreen() {
                   <Text style={screenStyles.emptyIcon}>☀️</Text>
                   <Text style={screenStyles.emptyTitle}>Aucun cours</Text>
                   <Text style={screenStyles.emptySubtitle}>
-                    {isToday() ? 'Profitez de votre journée libre !' : 'Pas de cours prévu demain'}
+                    {isToday() ? 'Profitez de votre journée libre !' : 'Pas de cours prévu'}
                   </Text>
                 </View>
               ) : (
@@ -266,7 +327,7 @@ export default function DayScreen() {
                       <EventCard 
                         key={shouldRefresh ? `${eventKey}-${refreshTrigger}` : eventKey}
                         event={event}
-                        variant="default" // elevation: 3 pour vue index
+                        variant="default"
                         onColorChanged={(eventId) => {
                           if (eventId) {
                             setExcludeFromRefresh(eventId);
@@ -282,6 +343,7 @@ export default function DayScreen() {
             </ScrollView>
           </Animated.View>
         </GestureDetector>
+        
         <LinearGradient
           colors={['transparent', COLORS.light.background]}
           style={screenStyles.tabBarFadeOverlay}

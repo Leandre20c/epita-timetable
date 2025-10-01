@@ -47,7 +47,7 @@ export class GroupService {
 
     if (!response.ok) {
       throw new Error(`Erreur API: ${response.status}`);
-    } 
+    }
 
     return await response.json();
   }
@@ -146,16 +146,22 @@ export class GroupService {
       throw new Error('Non authentifié');
     }
 
-    // Par défaut : 1er septembre de l'année en cours
-    const defaultStartDate = new Date(new Date().getFullYear(), 8, 1); // mois 8 = septembre
-    const date = startDate || defaultStartDate;
+    // Par défaut : 1er septembre de l'année scolaire en cours
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-11
     
-    // Format YYYY-MM-DD
-    const dateStr = date.toISOString().split('T')[0];
+    // Si on est entre janvier et août, prendre septembre de l'année précédente
+    // Sinon, prendre septembre de l'année en cours
+    const startYear = currentMonth < 8 ? currentYear - 1 : currentYear;
+    const defaultStartDate = new Date(startYear, 8, 1); // 1er septembre
+    
+    const date = startDate || defaultStartDate;
+    const dateStr = date.toISOString().split('T')[0]; // Format YYYY-MM-DD
 
     const url = `${this.API_URL}/group/${groupId}/ics?startDate=${dateStr}`;
     
-    console.log('📅 Récupération ICS depuis:', dateStr);
+    console.log('📅 Récupération ICS depuis:', dateStr, 'pour groupe:', groupId);
 
     const response = await fetch(url, {
       headers: {
@@ -165,9 +171,14 @@ export class GroupService {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Erreur API:', response.status, errorText);
       throw new Error(`Erreur API: ${response.status}`);
     }
 
-    return await response.text();
+    const icsContent = await response.text();
+    console.log('✅ ICS reçu, taille:', icsContent.length, 'caractères');
+
+    return icsContent;
   }
 }

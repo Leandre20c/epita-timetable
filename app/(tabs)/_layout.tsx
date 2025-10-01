@@ -70,15 +70,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="month"
-        options={{
-          title: 'Mois',
-          tabBarIcon: ({ color }: TabBarIconProps) => (
-            <TabBarIcon name="month" color={color} />
-          ),
-        }}
-      />
       {FEATURES.PROFILE_TAB && (
         <Tabs.Screen
           name="profile"

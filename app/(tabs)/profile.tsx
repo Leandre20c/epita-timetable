@@ -2,11 +2,12 @@
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthService } from '../../services/AuthService';
 import { GroupService } from '../../services/GroupeService';
 import { COLORS } from '../../styles/screenStyles';
+import EventEmitter from '../../utils/EventEmitter';
 
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
@@ -32,9 +34,23 @@ export default function ProfileScreen() {
     photo?: string;
   }>({});
 
+  useEffect(() => {
+    // Écoute les changements de groupe
+    const handleGroupChange = () => {
+      console.log('🔄 Groupe changé, rechargement...');
+      checkAuth();
+    };
+
+    EventEmitter.on('groupChanged', handleGroupChange);
+
+    return () => {
+      EventEmitter.off('groupChanged', handleGroupChange);
+    };
+  }, []);
+
+  // Garde aussi useFocusEffect pour le chargement initial
   useFocusEffect(
     useCallback(() => {
-      // Recharge les infos quand on revient sur l'écran
       checkAuth();
     }, [])
   );
@@ -86,12 +102,6 @@ export default function ProfileScreen() {
     );
   };
 
-  // 🧪 Bouton de test des permissions
-  const handleTestPermissions = async () => {
-    await AuthService.testAvailablePermissions();
-    await AuthService.testEpitaEndpoints();
-    Alert.alert('✅ Test terminé', 'Regarde les logs dans la console');
-  };
 
   if (isLoading) {
     return (
@@ -106,8 +116,23 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Profil</Text>
+        {/* Partie gauche : Titre + Version */}
+        <View>
+          <Text style={styles.title}>EpiTime</Text>
+          <Text style={styles.version}>Version 1.1.5</Text>
         </View>
+
+        {/* Partie droite : Bouton déconnexion (seulement si connecté) */}
+        {isAuthenticated && (
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.logoutButtonText}>Se déconnecter</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
         {!isAuthenticated ? (
           // Vue non connecté
@@ -132,33 +157,14 @@ export default function ProfileScreen() {
                 </Text>
               </TouchableOpacity>
             </LinearGradient>
-
-            <View style={styles.infoCard}>
-              <Text style={styles.infoTitle}>Pourquoi se connecter ?</Text>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoIcon}>📅</Text>
-                <Text style={styles.infoText}>
-                  Accès à votre emploi du temps personnalisé
-                </Text>
-              </View>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoIcon}>🔔</Text>
-                <Text style={styles.infoText}>
-                  Notifications pour vos cours
-                </Text>
-              </View>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoIcon}>🎨</Text>
-                <Text style={styles.infoText}>
-                  Personnalisation des couleurs de matières
-                </Text>
-              </View>
-            </View>
           </View>
         ) : (
           // Vue connecté avec VRAIE photo et nom
           <View style={styles.connectedContainer}>
-            <View style={styles.userCard}>
+            <TouchableOpacity
+              style={styles.userCard}
+              onPress={() => router.push('/select-group')}
+            >
               {/* Photo de profil */}
               {userInfo.photo ? (
                 <Image
@@ -184,54 +190,24 @@ export default function ProfileScreen() {
               <View style={styles.connectedBadge}>
                 <Text style={styles.connectedBadgeText}>✓</Text>
               </View>
-            </View>
+            </TouchableOpacity>
 
-            {/* 🧪 Bouton de test temporaire */}
+            {/* ⭐ Lien GitHub */}
             <TouchableOpacity
-              style={styles.testButton}
-              onPress={handleTestPermissions}
+              style={styles.githubContainer}
+              onPress={() => {
+                // Remplace par ton URL GitHub
+                Linking.openURL('https://github.com/Leandre20c/epita-timetable');
+              }}
+              activeOpacity={0.7}
             >
-              <Text style={styles.testButtonText}>
-                🧪 Tester les permissions disponibles
+              <Text style={styles.githubIcon}>⭐</Text>
+              <Text style={styles.githubText}>
+                Donne une étoile sur GitHub si tu aimes l'app !
               </Text>
-            </TouchableOpacity>
-
-            {/* Options */}
-            <View style={styles.optionsContainer}>
-              <TouchableOpacity 
-                style={styles.optionItem}
-                onPress={() => router.push('/select-group')}>
-                <Text style={styles.optionIcon}>👥</Text>
-                <Text style={styles.optionText}>Choisir mon groupe</Text>
-                <Text style={styles.optionArrow}>›</Text>
-            </TouchableOpacity>
-
-              <TouchableOpacity style={styles.optionItem}>
-                <Text style={styles.optionIcon}>🎨</Text>
-                <Text style={styles.optionText}>Personnaliser les couleurs</Text>
-                <Text style={styles.optionArrow}>›</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.optionItem}>
-                <Text style={styles.optionIcon}>🔔</Text>
-                <Text style={styles.optionText}>Notifications</Text>
-                <Text style={styles.optionArrow}>›</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Bouton déconnexion */}
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogout}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.logoutButtonText}>Se déconnecter</Text>
             </TouchableOpacity>
           </View>
         )}
-
-        {/* Version */}
-        <Text style={styles.version}>Version 1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -253,6 +229,9 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingVertical: 20,
+    flexDirection: 'row',           // ← Alignement horizontal
+    justifyContent: 'space-between', // ← Espace entre les éléments
+    alignItems: 'flex-start',        // ← Alignement en haut
   },
   title: {
     fontSize: 32,
@@ -444,22 +423,42 @@ const styles = StyleSheet.create({
 
   // Déconnexion
   logoutButton: {
-    backgroundColor: '#FF3B30',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    marginTop: 10,
+    alignItems: 'flex-end',
   },
   logoutButtonText: {
-    color: 'white',
+    color: 'red',
     fontSize: 16,
     fontWeight: '600',
   },
 
+  // GitHub Star
+  githubContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 30,
+    marginBottom: 30,
+    padding: 16,
+    backgroundColor: '#f6f8fa',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#d0d7de',
+  },
+  githubIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  githubText: {
+    fontSize: 14,
+    color: '#57606a',
+    fontWeight: '500',
+  },
+
   // Version
   version: {
-    textAlign: 'center',
+    textAlign: 'left',
     color: COLORS.light.text.secondary,
     fontSize: 12,
-    marginTop: 24,
   },
 });

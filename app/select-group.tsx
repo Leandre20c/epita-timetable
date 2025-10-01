@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CalendarService } from '../services/CalendarService';
 import { GroupNode, GroupService } from '../services/GroupeService';
 import { COLORS } from '../styles/screenStyles';
+import EventEmitter from '../utils/EventEmitter';
 
 export default function SelectGroupScreen() {
   const [groups, setGroups] = useState<GroupNode[]>([]);
@@ -67,6 +68,8 @@ export default function SelectGroupScreen() {
     
     // ✅ Vide le cache du calendrier
     await CalendarService.clearCache();
+
+    EventEmitter.emit('groupChanged');
     
     router.back();
   };

@@ -21,7 +21,7 @@ export const useSwipeNavigation = ({
 
   const panGesture = Gesture.Pan()
     .minDistance(10) // Distance minimale avant de détecter le geste
-    .failOffsetY([-20, 20]) // Échoue si mouvement vertical > 20px
+    .failOffsetY([-10, 10]) // Échoue si mouvement vertical > 20px
     .activeOffsetX([-30, 30]) // Active seulement après 30px horizontaux
     .onUpdate((event) => {
       // Seulement si le mouvement est principalement horizontal

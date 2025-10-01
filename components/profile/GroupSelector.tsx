@@ -2,7 +2,7 @@
 
 import { useGroupTree } from '@/hook/useGroupTree';
 import { CalendarService } from '@/services/CalendarService';
-import { UserPreferencesService } from '@/services/UserPreferencesService';
+import { GroupNode, GroupService } from '@/services/GroupeService';
 import { COLORS } from '@/styles/screenStyles';
 import React, { useEffect, useState } from 'react';
 import {
@@ -16,6 +16,8 @@ import {
   View,
 } from 'react-native';
 
+// components/profile/GroupSelector.tsx
+
 interface GroupSelectorProps {
   onGroupChanged?: () => void;
 }
@@ -23,42 +25,51 @@ interface GroupSelectorProps {
 export function GroupSelector({ onGroupChanged }: GroupSelectorProps) {
   const { data: tree, isLoading, error, refetch } = useGroupTree();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<GroupNode | null>(null);
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
   const [expandedSpecs, setExpandedSpecs] = useState<Set<string>>(new Set());
 
-  // Charger le groupe sélectionné au montage
   useEffect(() => {
     loadSelectedGroup();
   }, []);
 
   const loadSelectedGroup = async () => {
-    const group = await UserPreferencesService.getSelectedGroup();
+    const group = await GroupService.getSelectedGroup();
     setSelectedGroup(group);
   };
 
-  const handleSelectGroup = async (groupId: string) => {
+  const handleSelectGroup = async (groupNode: any) => {
     try {
-      await UserPreferencesService.setSelectedGroup(groupId);
-      setSelectedGroup(groupId);
+      // Convertir le nœud de l'arbre en GroupNode
+      const group: GroupNode = {
+        id: parseInt(groupNode.id) || 0,
+        name: groupNode.label,
+        path: groupNode.value,
+        count: 0,
+        color: '#759bf5',
+        children: [],
+        level: 0,
+      };
+
+      await GroupService.saveSelectedGroup(group);
+      setSelectedGroup(group);
       
-      // Invalider le cache du calendrier
-      CalendarService.clearCache();
+      await CalendarService.clearCache();
       
       setIsModalVisible(false);
       
       Alert.alert(
-        '✅ Groupe modifié',
-        `Votre planning est maintenant configuré pour ${groupId}`,
+        'Groupe modifié',
+        `Votre planning est maintenant configuré pour ${group.name}`,
         [{ text: 'OK' }]
       );
 
-      // Notifier le parent pour rafraîchir
       onGroupChanged?.();
       
     } catch (error) {
+      console.error('Erreur sauvegarde groupe:', error);
       Alert.alert(
-        '❌ Erreur',
+        'Erreur',
         'Impossible de sauvegarder votre choix',
         [{ text: 'OK' }]
       );
@@ -92,7 +103,7 @@ export function GroupSelector({ onGroupChanged }: GroupSelectorProps) {
         onPress={() => setIsModalVisible(true)}
       >
         <Text style={styles.buttonText}>
-          {selectedGroup || 'Sélectionner ma classe'}
+          {selectedGroup?.name || 'Sélectionner ma classe'}
         </Text>
         <Text style={styles.buttonIcon}>▼</Text>
       </TouchableOpacity>
@@ -165,17 +176,17 @@ export function GroupSelector({ onGroupChanged }: GroupSelectorProps) {
                             key={groupNode.id}
                             style={[
                               styles.groupButton,
-                              selectedGroup === groupNode.value && styles.groupButtonSelected
+                              selectedGroup?.path === groupNode.value && styles.groupButtonSelected
                             ]}
-                            onPress={() => handleSelectGroup(groupNode.value)}
+                            onPress={() => handleSelectGroup(groupNode)}
                           >
                             <Text style={[
                               styles.groupText,
-                              selectedGroup === groupNode.value && styles.groupTextSelected
+                              selectedGroup?.path === groupNode.value && styles.groupTextSelected
                             ]}>
                               {groupNode.label}
                             </Text>
-                            {selectedGroup === groupNode.value && (
+                            {selectedGroup?.path === groupNode.value && (
                               <Text style={styles.checkmark}>✓</Text>
                             )}
                           </TouchableOpacity>

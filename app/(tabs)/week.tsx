@@ -1,4 +1,5 @@
 // app/(tabs)/week.tsx
+
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -8,7 +9,7 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -16,9 +17,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EventCard } from '../../components/EventCard';
 import { useSwipeNavigation } from '../../hook/useSwipeNavigation';
+import { AuthService } from '../../services/AuthService';
 import { CalendarService } from '../../services/CalendarService';
 import { COLORS, screenStyles } from '../../styles/screenStyles';
 import { WeekSchedule } from '../../types/CalendarTypes';
+import EventEmitter from '../../utils/EventEmitter';
 
 export default function WeekScreen() {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => 
@@ -27,10 +30,10 @@ export default function WeekScreen() {
   const [weekSchedule, setWeekSchedule] = useState<WeekSchedule | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  // Événements préchargés pour les semaines voisines
   const [preloadedSchedules, setPreloadedSchedules] = useState<{
-    [key: string]: WeekSchedule
+    [key: string]: WeekSchedule;
   }>({});
 
   const formatWeekKey = (weekStart: Date): string => {
@@ -44,7 +47,6 @@ export default function WeekScreen() {
     const previousKey = formatWeekKey(previousWeek);
     const nextKey = formatWeekKey(nextWeek);
 
-    // Précharger seulement si pas déjà en cache
     const preloadPromises = [];
     
     if (!preloadedSchedules[previousKey]) {
@@ -63,7 +65,6 @@ export default function WeekScreen() {
       );
     }
 
-    // Lancer les préchargements en arrière-plan
     Promise.all(preloadPromises).catch(error => 
       console.warn('Erreur préchargement semaines:', error)
     );
@@ -113,11 +114,58 @@ export default function WeekScreen() {
   };
 
   useEffect(() => {
-    loadWeekData(currentWeekStart);
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const authenticated = await AuthService.isAuthenticated();
+    setIsAuthenticated(authenticated);
+    
+    if (authenticated) {
+      loadWeekData(currentWeekStart);
+    } else {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadWeekData(currentWeekStart);
+    }
+  }, [currentWeekStart, isAuthenticated]);
+
+  useEffect(() => {
+    const handleAuthChange = async () => {
+      console.log('🔄 Auth changé, vérification...');
+      const authenticated = await AuthService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      
+      if (authenticated) {
+        setPreloadedSchedules({});
+        await loadWeekData(currentWeekStart);
+      } else {
+        setWeekSchedule(null);
+      }
+    };
+
+    const handleGroupChange = async () => {
+      console.log('🔄 Groupe changé, rechargement...');
+      setPreloadedSchedules({});
+      await loadWeekData(currentWeekStart);
+    };
+
+    EventEmitter.on('authChanged', handleAuthChange);
+    EventEmitter.on('groupChanged', handleGroupChange);
+
+    return () => {
+      EventEmitter.off('authChanged', handleAuthChange);
+      EventEmitter.off('groupChanged', handleGroupChange);
+    };
   }, [currentWeekStart]);
 
   const handleRefresh = () => {
     CalendarService.clearCache();
+    setPreloadedSchedules({});
     loadWeekData(currentWeekStart);
   };
 
@@ -130,7 +178,7 @@ export default function WeekScreen() {
     onSwipeLeft: handleNext,
     onSwipeRight: handlePrevious,
     canSwipeLeft: true,
-    canSwipeRight: true
+    canSwipeRight: true,
   });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -166,7 +214,6 @@ export default function WeekScreen() {
       return 'Pas';
     }
     
-    // Estimation moyenne de 2h par cours
     const totalHours = totalEvents * 2;
     return `${totalHours} ${totalHours > 1 ? 'heures' : 'heure'}`;
   };
@@ -175,6 +222,31 @@ export default function WeekScreen() {
     const thisWeek = CalendarService.getWeekStart(new Date());
     return Math.abs(currentWeekStart.getTime() - thisWeek.getTime()) < 24 * 60 * 60 * 1000;
   };
+
+  if (isAuthenticated === null) {
+    return (
+      <SafeAreaView style={screenStyles.container}>
+        <View style={screenStyles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={screenStyles.loadingText}>Vérification...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={screenStyles.container}>
+        <View style={screenStyles.emptyContainer}>
+          <Text style={screenStyles.emptyIcon}>🔐</Text>
+          <Text style={screenStyles.emptyTitle}>Non connecté</Text>
+          <Text style={screenStyles.emptySubtitle}>
+            Connectez-vous pour accéder à votre emploi du temps
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -190,7 +262,6 @@ export default function WeekScreen() {
   return (
     <View style={screenStyles.container}>
       <View style={{ flex: 1 }}>
-        {/* En-tête cliquable pour aller à cette semaine */}
         <TouchableOpacity 
           style={[screenStyles.dayHeader, isCurrentWeek() && screenStyles.todayHeader]}
           onPress={handleToday}
@@ -204,11 +275,11 @@ export default function WeekScreen() {
           </Text>
         </TouchableOpacity>
 
-        {/* Contenu avec swipe */}
         <GestureDetector gesture={panGesture}>
           <Animated.View style={[{ flex: 1 }, animatedStyle]}>
             <ScrollView
               style={screenStyles.scrollView}
+              contentContainerStyle={{ paddingBottom: 100 }}
               refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />}
             >
               {!weekSchedule || getTotalEvents() === 0 ? (
@@ -236,7 +307,7 @@ export default function WeekScreen() {
                           {dayDate.toLocaleDateString('fr-FR', { 
                             weekday: 'long', 
                             day: 'numeric', 
-                            month: 'short' 
+                            month: 'short',
                           })}
                           {isToday && ' (Aujourd\'hui)'}
                         </Text>
@@ -245,7 +316,7 @@ export default function WeekScreen() {
                           <EventCard 
                             key={event.id || `event-${index}`} 
                             event={event} 
-                            variant="compact" // elevation: 0 pour vue week
+                            variant="compact"
                           />
                         ))}
                       </View>
