@@ -1,6 +1,6 @@
 # EpiTime
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/Leandre20c/epita-timetable/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/Leandre20c/epita-timetable/releases)
 [![Platform](https://img.shields.io/badge/platform-Android-green.svg)](https://github.com/Leandre20c/epita-timetable)
 [![License](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/Leandre20c/epita-timetable/total.svg)](https://github.com/Leandre20c/epita-timetable/releases)
@@ -12,12 +12,9 @@ Application mobile pour consulter l'emploi du temps EPITA de manière intuitive 
 EpiTime permet aux étudiants d'EPITA de :
 - Consulter leur emploi du temps en temps réel
 - Naviguer par jour, semaine ou mois
-- Recevoir des notifications en cas de changements
-- Accéder à leurs cours même hors ligne (cache)
+- Possibilité de choisir sa classe
 
 ### Captures d'écran
-
-v1.1.0
 
 <img width="265" height="600" alt="image" src="https://github.com/user-attachments/assets/a9d9daaf-b037-498f-96f5-adf3295c25ab" />
 
@@ -36,6 +33,7 @@ v1.1.0
 #### iOS
 *Version iOS en développement*
 
+
 ### Configuration requise
 - Android 5.0+ (API niveau 21)
 - Connexion internet pour la synchronisation
@@ -47,23 +45,6 @@ v1.1.0
 1. Lancez l'application
 2. L'emploi du temps se synchronise automatiquement
 3. Naviguez entre les différentes vues (jour/semaine/mois)
-
-### Fonctionnalités principales
-
-#### Navigation
-- **Vue jour** : Planning détaillé de la journée
-- **Vue semaine** : Vue d'ensemble hebdomadaire
-- **Vue mois** : Calendrier mensuel avec événements
-
-#### Notifications [bêta]
-- Activation automatique des notifications de changements
-- Alertes en cas de cours annulés ou déplacés
-- Rappels avant les cours _(bientôt)_
-
-#### Mode hors ligne
-- Cache automatique des données
-- Consultation possible sans connexion
-- Synchronisation lors de la reconnexion
 
 ## 🛠️ Pour les développeurs
 
@@ -86,7 +67,7 @@ cd epita-timetable
 npm install
 
 # Lancer en développement
-npx expo start
+npx expo start --go
 ```
 
 ### Contribuer
@@ -105,7 +86,7 @@ npx expo start
 - ✅ Notifications de changements
 - ✅ Mode hors ligne
 - ✅ Interface moderne et intuitive
-### Version 1.1.0 (Actuelle)
+### Version 1.1.0
 - ✅ Swipe Gauche / Droite
 - ✅ Boutons de navigations retirés
 - ✅ UI & UX plus moderne et intuitive
@@ -113,14 +94,20 @@ npx expo start
 - ✅ Couleurs logiques
 - ✅ Création d'un logo
 - ✅ Changement de nom -> EpiTime
+### Version 1.2.0 (Actuelle)
+- ✅ Scroll plus tolérant
+- ✅ Choisir sa classe
+- ✅ Meilleure pop-up pour l'affichage d'un cours
+- ✅ Tab Profil -> Connection et choisir sa classe
 
-### Prochaines versions
-- 🔄 Version iOS
+### Prochaines versions - Ordre d'importance
+- 🔄 Restructuration de l'app par modules / Optimisations
+- 🔄 Cache hors ligne intelligent
 - 🔄 Widget Android
+- 🔄 Visualisation par Mois
 - 🔄 Mode sombre
-- 🔄 Visualisation par Mois plus claire
 - 🔄 Gestion de notifications
-- 🔄 Possibilité de choisir sa classe
+- 🔄 Version iOS
 
 ## 🐛 Signaler un bug
 
