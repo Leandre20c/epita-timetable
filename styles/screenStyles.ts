@@ -494,6 +494,19 @@ export const screenStyles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
+
+  // Offline
+
+  offlineBanner: {
+    backgroundColor: COLORS.warning,
+    padding: SPACING.sm,
+    alignItems: 'center',
+  },
+
+  offlineText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
 });
 
 export const modalStyles = StyleSheet.create({
@@ -678,6 +691,7 @@ export const modalStyles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
 
 // ===================================
 // STYLES POUR MODE SOMBRE (À UTILISER CONDITIONNELLEMENT)

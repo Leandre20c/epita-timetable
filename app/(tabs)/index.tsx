@@ -16,6 +16,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EventCard } from '../../components/EventCard';
+import { useNetworkStatus } from '../../hook/useNetworkStatus';
 import { useSwipeNavigation } from '../../hook/useSwipeNavigation';
 import { AuthService } from '../../services/AuthService';
 import { CalendarService } from '../../services/CalendarService';
@@ -31,6 +32,7 @@ export default function DayScreen() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [excludeFromRefresh, setExcludeFromRefresh] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { isOnline } = useNetworkStatus();
   
   const [preloadedEvents, setPreloadedEvents] = useState<{
     [key: string]: CalendarEvent[];
@@ -88,6 +90,9 @@ export default function DayScreen() {
         dayEvents = await CalendarService.getEventsForDate(date);
         setPreloadedEvents(prev => ({ ...prev, [dateKey]: dayEvents }));
       }
+      
+      // ✅ Tri par heure de début
+      dayEvents.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
       
       setEvents(dayEvents);
       
@@ -287,8 +292,18 @@ export default function DayScreen() {
   }
 
   return (
+    
     <View style={screenStyles.container}>
       <View style={{ flex: 1 }}>
+        
+        {!isOnline && (
+        <View style={screenStyles.offlineBanner}>
+          <Text style={screenStyles.offlineText}>
+            📡 Mode hors-ligne - Données en cache
+          </Text>
+        </View>
+      )}
+
         <TouchableOpacity 
           style={[screenStyles.dayHeader, isToday() && screenStyles.todayHeader]}
           onPress={handleToday}

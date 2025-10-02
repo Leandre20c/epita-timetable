@@ -1,9 +1,10 @@
 // services/CalendarService.ts
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ICAL from 'ical.js'; // ✅ Utilise ical.js au lieu de node-ical
+import ICAL from 'ical.js';
 import { CalendarEvent } from '../types/CalendarTypes';
 import { AuthService } from './AuthService';
+import { CacheService } from './CacheService';
 import { GroupService } from './GroupeService';
 import SubjectColorService from './SubjectColorService';
 
@@ -20,52 +21,113 @@ export type WeekSchedule = {
   days: DaySchedule[];
 };
 
-export class CalendarService {
-  private static readonly CACHE_KEY = '@calendar_cache';
-  private static readonly CACHE_TIMESTAMP_KEY = '@calendar_cache_timestamp';
-  private static readonly CACHE_DURATION = 60 * 60 * 1000; // 1 heure
+export type MonthSchedule = {
+  year: number;
+  month: number;
+  events: CalendarEvent[];
+};
 
+export class CalendarService {
   /**
-   * Récupère les événements du groupe sélectionné
+   * 🆕 Récupère les événements avec cache intelligent IndexedDB
    */
-  // services/CalendarService.ts
   static async fetchSchedule(): Promise<CalendarEvent[]> {
     try {
-      // Vérifier si l'utilisateur est authentifié
+      // 1. Vérifier l'authentification
       const isAuthenticated = await AuthService.isAuthenticated();
-      
       if (!isAuthenticated) {
         console.log('⚠️ Non authentifié');
-        return []; // Retourner un tableau vide
+        return [];
       }
 
-      const cached = await this.getCachedEvents();
-      if (cached) {
-        console.log('📦 Cache utilisé');
-        return cached;
-      }
-
+      // 2. Récupérer le groupe sélectionné
       const selectedGroup = await GroupService.getSelectedGroup();
-      
       if (!selectedGroup) {
         console.log('⚠️ Aucun groupe sélectionné');
         return [];
       }
 
-      console.log('📡 Récupération pour:', selectedGroup.name);
+      const groupId = selectedGroup.id;
+      const groupName = selectedGroup.name;
 
-      const icsContent = await GroupService.fetchGroupCalendar(selectedGroup.id);
-      const events = this.parseICS(icsContent);
+      // 3. Vérifier le cache IndexedDB
+      const cached = await CacheService.getCalendarFromCache(groupId);
+      const isOnline = await CacheService.isOnline();
+
+      // 4. Mode OFFLINE → utiliser cache (même périmé)
+      if (!isOnline) {
+        if (cached) {
+          console.log('📡 Mode hors-ligne - Cache utilisé');
+          return cached.events;
+        } else {
+          console.log('❌ Mode hors-ligne - Aucun cache disponible');
+          throw new Error('Aucune donnée en cache et pas de connexion');
+        }
+      }
+
+      // 5. Cache FRAIS → utiliser cache (même online)
+      if (cached && CacheService.isCacheFresh(cached.timestamp)) {
+        console.log('⚡ Cache frais - Chargement instantané');
+        return cached.events;
+      }
+
+      // 6. FETCH depuis l'API (cache périmé ou inexistant)
+      console.log('📡 Récupération réseau pour:', groupName);
       
-      await this.cacheEvents(events);
-      
-      console.log(`✅ ${events.length} événements chargés`);
-      
-      return events;
+      try {
+        const icsContent = await GroupService.fetchGroupCalendar(groupId);
+        const events = this.parseICS(icsContent);
+        
+        // 7. Sauvegarder dans IndexedDB
+        await CacheService.saveCalendarToCache(
+          groupId,
+          groupName,
+          events,
+          icsContent
+        );
+
+        // 8. Nettoyer l'ancien cache AsyncStorage (migration)
+        await this.migrateOldCache();
+
+        // 9. Nettoyer les vieux caches
+        await CacheService.cleanOldCache();
+
+        console.log(`✅ ${events.length} événements chargés et mis en cache`);
+        return events;
+
+      } catch (fetchError) {
+        // 10. Erreur réseau → Fallback sur cache périmé
+        if (cached) {
+          console.log('⚠️ Erreur réseau - Utilisation du cache périmé');
+          return cached.events;
+        }
+        throw fetchError;
+      }
 
     } catch (error) {
       console.error('❌ Erreur fetchSchedule:', error);
       throw error;
+    }
+  }
+
+  /**
+   * 🆕 Migration de l'ancien cache AsyncStorage vers IndexedDB
+   * (Peut être supprimé après quelques versions)
+   */
+  private static async migrateOldCache(): Promise<void> {
+    try {
+      const oldCache = await AsyncStorage.getItem('@calendar_cache');
+      if (oldCache) {
+        console.log('🔄 Migration ancien cache AsyncStorage...');
+        await AsyncStorage.multiRemove([
+          '@calendar_cache',
+          '@calendar_cache_timestamp'
+        ]);
+        console.log('✅ Ancien cache supprimé');
+      }
+    } catch (error) {
+      // Ignorer les erreurs de migration
+      console.warn('⚠️ Erreur migration cache:', error);
     }
   }
 
@@ -137,51 +199,22 @@ export class CalendarService {
   }
 
   /**
-   * Cache les événements
-   */
-  private static async cacheEvents(events: CalendarEvent[]): Promise<void> {
-    try {
-      await AsyncStorage.setItem(this.CACHE_KEY, JSON.stringify(events));
-      await AsyncStorage.setItem(this.CACHE_TIMESTAMP_KEY, Date.now().toString());
-    } catch (error) {
-      console.error('Erreur cache:', error);
-    }
-  }
-
-  /**
-   * Récupère du cache
-   */
-  private static async getCachedEvents(): Promise<CalendarEvent[] | null> {
-    try {
-      const cached = await AsyncStorage.getItem(this.CACHE_KEY);
-      const timestamp = await AsyncStorage.getItem(this.CACHE_TIMESTAMP_KEY);
-
-      if (!cached || !timestamp) return null;
-
-      const age = Date.now() - parseInt(timestamp);
-      if (age > this.CACHE_DURATION) {
-        console.log('⏰ Cache expiré');
-        return null;
-      }
-
-      const events = JSON.parse(cached);
-      
-      return events.map((e: any) => ({
-        ...e,
-        startTime: new Date(e.startTime),
-        endTime: new Date(e.endTime),
-      }));
-
-    } catch (error) {
-      return null;
-    }
-  }
-
-  /**
-   * Vide le cache
+   * 🆕 Vide le cache (nouvelle version avec IndexedDB)
    */
   static async clearCache(): Promise<void> {
-    await AsyncStorage.multiRemove([this.CACHE_KEY, this.CACHE_TIMESTAMP_KEY]);
+    // Vider le cache IndexedDB
+    await CacheService.clearAllCache();
+    
+    // Migration: vider aussi l'ancien cache AsyncStorage
+    try {
+      await AsyncStorage.multiRemove([
+        '@calendar_cache',
+        '@calendar_cache_timestamp'
+      ]);
+    } catch (error) {
+      // Ignorer les erreurs
+    }
+    
     console.log('🗑️ Cache vidé');
   }
 
@@ -235,85 +268,135 @@ export class CalendarService {
     return this.getEventsForDate(new Date());
   }
 
+  /**
+   * Obtient le début de semaine (lundi) pour une date donnée
+   */
   static getWeekStart(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Lundi comme premier jour
-  return new Date(d.setDate(diff));
-}
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Lundi comme premier jour
+    return new Date(d.setDate(diff));
+  }
 
-/**
- * Obtient la semaine précédente
- */
-static getPreviousWeek(weekStart: Date): Date {
-  const prev = new Date(weekStart);
-  prev.setDate(prev.getDate() - 7);
-  return prev;
-}
+  /**
+   * Obtient la semaine précédente
+   */
+  static getPreviousWeek(weekStart: Date): Date {
+    const prev = new Date(weekStart);
+    prev.setDate(prev.getDate() - 7);
+    return prev;
+  }
 
-/**
- * Obtient la semaine suivante
- */
-static getNextWeek(weekStart: Date): Date {
-  const next = new Date(weekStart);
-  next.setDate(next.getDate() + 7);
-  return next;
-}
+  /**
+   * Obtient la semaine suivante
+   */
+  static getNextWeek(weekStart: Date): Date {
+    const next = new Date(weekStart);
+    next.setDate(next.getDate() + 7);
+    return next;
+  }
 
-/**
- * Formate la période d'une semaine (ex: "27 jan - 2 fév")
- */
-static formatWeekPeriod(weekStart: Date, weekEnd: Date): string {
-  const startStr = weekStart.toLocaleDateString('fr-FR', { 
-    day: 'numeric', 
-    month: 'short' 
-  });
-  const endStr = weekEnd.toLocaleDateString('fr-FR', { 
-    day: 'numeric', 
-    month: 'short' 
-  });
-  return `${startStr} - ${endStr}`;
-}
-
-/**
- * Obtient le planning d'une semaine avec structure organisée
- */
-static async getWeekSchedule(weekStart: Date): Promise<WeekSchedule> {
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6); // 6 jours après le lundi
-
-  const events = await this.getEventsForWeek(weekStart);
-
-  // Créer un tableau de 7 jours
-  const days: DaySchedule[] = [];
-  
-  for (let i = 0; i < 7; i++) {
-    const currentDay = new Date(weekStart);
-    currentDay.setDate(currentDay.getDate() + i);
-    
-    const dayEvents = events.filter(event => {
-      const eventDate = event.startTime;
-      return (
-        eventDate.getFullYear() === currentDay.getFullYear() &&
-        eventDate.getMonth() === currentDay.getMonth() &&
-        eventDate.getDate() === currentDay.getDate()
-      );
+  /**
+   * Formate la période d'une semaine (ex: "27 jan - 2 fév")
+   */
+  static formatWeekPeriod(weekStart: Date, weekEnd: Date): string {
+    const startStr = weekStart.toLocaleDateString('fr-FR', { 
+      day: 'numeric', 
+      month: 'short' 
     });
+    const endStr = weekEnd.toLocaleDateString('fr-FR', { 
+      day: 'numeric', 
+      month: 'short' 
+    });
+    return `${startStr} - ${endStr}`;
+  }
 
-    // Trier les événements par heure de début
-    dayEvents.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+  /**
+   * Obtient le planning d'une semaine avec structure organisée
+   */
+  static async getWeekSchedule(weekStart: Date): Promise<WeekSchedule> {
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6); // 6 jours après le lundi
 
-    days.push({
-      date: currentDay.toISOString().split('T')[0],
-      dayName: currentDay.toLocaleDateString('fr-FR', { weekday: 'long' }),
-      events: dayEvents,
+    const events = await this.getEventsForWeek(weekStart);
+
+    // Créer un tableau de 7 jours
+    const days: DaySchedule[] = [];
+    
+    for (let i = 0; i < 7; i++) {
+      const currentDay = new Date(weekStart);
+      currentDay.setDate(currentDay.getDate() + i);
+      
+      const dayEvents = events.filter(event => {
+        const eventDate = event.startTime;
+        return (
+          eventDate.getFullYear() === currentDay.getFullYear() &&
+          eventDate.getMonth() === currentDay.getMonth() &&
+          eventDate.getDate() === currentDay.getDate()
+        );
+      });
+
+      // Trier les événements par heure de début
+      dayEvents.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+      days.push({
+        date: currentDay.toISOString().split('T')[0],
+        dayName: currentDay.toLocaleDateString('fr-FR', { weekday: 'long' }),
+        events: dayEvents,
+      });
+    }
+
+    return {
+      weekStart,
+      weekEnd,
+      days,
+    };
+  }
+
+  /**
+   * Obtient le mois précédent
+   */
+  static getPreviousMonth(date: Date): Date {
+    const prev = new Date(date);
+    prev.setMonth(prev.getMonth() - 1);
+    return prev;
+  }
+
+  /**
+   * Obtient le mois suivant
+   */
+  static getNextMonth(date: Date): Date {
+    const next = new Date(date);
+    next.setMonth(next.getMonth() + 1);
+    return next;
+  }
+
+  /**
+   * Formate le nom du mois (ex: "Janvier 2025")
+   */
+  static formatMonthPeriod(date: Date): string {
+    return date.toLocaleDateString('fr-FR', { 
+      month: 'long', 
+      year: 'numeric' 
     });
   }
 
-  return {
-    weekStart,
-    weekEnd,
-    days,
-  };
-}
+  /**
+   * Obtient le planning d'un mois avec structure organisée
+   */
+  static async getMonthSchedule(date: Date): Promise<MonthSchedule> {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    const events = await this.getEventsForMonth(year, month);
+
+    // Trier les événements par date
+    events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+    return {
+      year,
+      month,
+      events,
+    };
+  }
 }

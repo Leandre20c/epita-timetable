@@ -157,6 +157,7 @@ export default function ProfileScreen() {
                 </Text>
               </TouchableOpacity>
             </LinearGradient>
+
           </View>
         ) : (
           // Vue connecté avec VRAIE photo et nom

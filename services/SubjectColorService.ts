@@ -79,10 +79,8 @@ class SubjectColorService {
   }
 
   private findColorByKeywords(title: string): string | null {
-    console.log(`Recherche couleur pour: "${title}"`);
     
     const keywords = this.extractKeywords(title);
-    console.log('Mots-clés extraits:', keywords);
     
     // 1. PRIORITÉ : Recherche par mots-clés importants
     for (const keyword of keywords) {
@@ -119,7 +117,6 @@ class SubjectColorService {
       }
     }
 
-    console.log(`❌ Aucune couleur trouvée pour "${title}"`);
     return null;
   }
 
@@ -131,7 +128,6 @@ class SubjectColorService {
 
     const foundColor = this.findColorByKeywords(subjectName);
     const finalColor = foundColor || DEFAULT_COLOR;
-    console.log(`🎨 Couleur finale pour "${subjectName}": ${finalColor}`);
     return finalColor;
   }
 
@@ -147,7 +143,6 @@ class SubjectColorService {
       if (mainKeyword) {
         // Utiliser le mot-clé principal
         keyToUse = mainKeyword;
-        console.log(`🎯 Utilisation du mot-clé: "${mainKeyword}"`);
         
         // Supprimer les anciennes entrées spécifiques qui contiennent ce mot-clé
         const toDelete: string[] = [];
