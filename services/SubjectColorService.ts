@@ -86,7 +86,6 @@ class SubjectColorService {
     for (const keyword of keywords) {
       if (IMPORTANT_KEYWORDS.includes(keyword)) {
         if (this.colors[keyword]) {
-          console.log(`✅ Trouvé mot-clé important "${keyword}": ${this.colors[keyword]}`);
           return this.colors[keyword];
         }
       }
@@ -94,7 +93,6 @@ class SubjectColorService {
 
     // 2. Recherche exacte (titre complet)
     if (this.colors[title]) {
-      console.log(`✅ Trouvé exact: ${this.colors[title]}`);
       return this.colors[title];
     }
     
@@ -102,7 +100,6 @@ class SubjectColorService {
     const titleLower = title.toLowerCase();
     for (const [subject, color] of Object.entries(this.colors)) {
       if (subject.toLowerCase() === titleLower) {
-        console.log(`✅ Trouvé exact (case insensitive): ${color}`);
         return color;
       }
     }
@@ -111,7 +108,6 @@ class SubjectColorService {
     for (const keyword of keywords) {
       for (const [subject, color] of Object.entries(this.colors)) {
         if (subject.toLowerCase().includes(keyword)) {
-          console.log(`✅ Trouvé inclusion "${keyword}" dans "${subject}": ${color}`);
           return color;
         }
       }

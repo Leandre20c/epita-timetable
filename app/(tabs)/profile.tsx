@@ -1,11 +1,11 @@
 // app/(tabs)/profile.tsx
 
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { ArrowUpRight } from 'lucide-react-native';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
   Image,
   Linking,
   ScrollView,
@@ -15,17 +15,17 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CustomAlert } from '../../components/CustomAlert';
+import { Screen } from '../../components/Screen';
 import { AuthService } from '../../services/AuthService';
 import { GroupService } from '../../services/GroupeService';
 import { COLORS } from '../../styles/screenStyles';
 import EventEmitter from '../../utils/EventEmitter';
 
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
-
 export default function ProfileScreen() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     name?: string;
     email?: string;
@@ -35,7 +35,6 @@ export default function ProfileScreen() {
   }>({});
 
   useEffect(() => {
-    // Écoute les changements de groupe
     const handleGroupChange = () => {
       console.log('🔄 Groupe changé, rechargement...');
       checkAuth();
@@ -48,7 +47,6 @@ export default function ProfileScreen() {
     };
   }, []);
 
-  // Garde aussi useFocusEffect pour le chargement initial
   useFocusEffect(
     useCallback(() => {
       checkAuth();
@@ -61,14 +59,12 @@ export default function ProfileScreen() {
       setIsAuthenticated(authenticated);
 
       if (authenticated) {
-        // Récupère le groupe sélectionné au lieu des infos Microsoft
         const selectedGroup = await GroupService.getSelectedGroup();
         
         if (selectedGroup) {
           setUserInfo({
             name: selectedGroup.name,
             email: 'EPITA',
-            // Pas de photo, on utilisera juste l'initiale
           });
         }
       }
@@ -83,31 +79,24 @@ export default function ProfileScreen() {
     router.push('/login');
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Déconnexion',
-          style: 'destructive',
-          onPress: async () => {
-            await AuthService.logout();
-            setIsAuthenticated(false);
-            setUserInfo({});
-          },
-        },
-      ]
-    );
+  const handleLogout = () => {
+    setShowLogoutAlert(true);
   };
 
+  const confirmLogout = async () => {
+    setShowLogoutAlert(false);
+    await AuthService.logout();
+    setIsAuthenticated(false);
+    setUserInfo({});
+  };
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
+      <Screen 
+        isAuthenticated={null} 
+        isRefreshing={true} 
+        loadingText="Chargement du profil..." 
+      />
     );
   }
 
@@ -116,23 +105,21 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-        {/* Partie gauche : Titre + Version */}
-        <View>
-          <Text style={styles.title}>EpiTime</Text>
-          <Text style={styles.version}>Version 1.1.5</Text>
-        </View>
+          <View>
+            <Text style={styles.title}>EpiTime</Text>
+            <Text style={styles.version}>Version 1.2.2</Text>
+          </View>
 
-        {/* Partie droite : Bouton déconnexion (seulement si connecté) */}
-        {isAuthenticated && (
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={handleLogout}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.logoutButtonText}>Se déconnecter</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          {isAuthenticated && (
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.logoutButtonText}>Se déconnecter</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         {!isAuthenticated ? (
           // Vue non connecté
@@ -157,16 +144,14 @@ export default function ProfileScreen() {
                 </Text>
               </TouchableOpacity>
             </LinearGradient>
-
           </View>
         ) : (
-          // Vue connecté avec VRAIE photo et nom
+          // Vue connecté
           <View style={styles.connectedContainer}>
             <TouchableOpacity
               style={styles.userCard}
               onPress={() => router.push('/select-group')}
             >
-              {/* Photo de profil */}
               {userInfo.photo ? (
                 <Image
                   source={{ uri: userInfo.photo }}
@@ -182,34 +167,45 @@ export default function ProfileScreen() {
 
               <View style={styles.userInfo}>
                 <Text style={styles.userName}>
-                  {userInfo.name || 'Utilisateur EPITA'}
+                  {userInfo.name || 'Choisir un groupe'}
                 </Text>
                 <Text style={styles.userEmail}>
-                  {userInfo.email || 'epita.fr'}
+                  {userInfo.email || ''}
                 </Text>
               </View>
-              <View style={styles.connectedBadge}>
-                <Text style={styles.connectedBadgeText}>✓</Text>
-              </View>
+              <Text style={styles.connectedBadge}>
+                <ArrowUpRight size={50} color={COLORS.light.text.primary} strokeWidth={1.5}/>
+              </Text>
             </TouchableOpacity>
 
-            {/* ⭐ Lien GitHub */}
+            {/* Lien GitHub */}
             <TouchableOpacity
               style={styles.githubContainer}
               onPress={() => {
-                // Remplace par ton URL GitHub
                 Linking.openURL('https://github.com/Leandre20c/epita-timetable');
               }}
               activeOpacity={0.7}
             >
               <Text style={styles.githubIcon}>⭐</Text>
               <Text style={styles.githubText}>
-                Donne une étoile sur GitHub si tu aimes l'app !
+                Met une étoile sur GitHub si tu aimes l'app !
               </Text>
             </TouchableOpacity>
           </View>
         )}
       </ScrollView>
+
+      {/* Alert de confirmation de déconnexion - 2 boutons */}
+      <CustomAlert
+        visible={showLogoutAlert}
+        title="Déconnexion"
+        message="Êtes-vous sûr de vouloir vous déconnecter ?"
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutAlert(false)}
+        confirmText="Déconnexion"
+        cancelText="Annuler"
+        type="deconnexion"
+      />
     </SafeAreaView>
   );
 }
@@ -219,25 +215,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.light.background,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   scrollContent: {
     paddingBottom: 100,
   },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 20,
-    flexDirection: 'row',           // ← Alignement horizontal
-    justifyContent: 'space-between', // ← Espace entre les éléments
-    alignItems: 'flex-start',        // ← Alignement en haut
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: COLORS.light.text.primary,
+  },
+  version: {
+    textAlign: 'left',
+    color: COLORS.light.text.secondary,
+    fontSize: 12,
+  },
+  logoutButton: {
+    marginTop: 10,
+    alignItems: 'flex-end',
+  },
+  logoutButtonText: {
+    color: '#ef4444',
+    fontSize: 16,
+    fontWeight: '600',
   },
 
   // Non connecté
@@ -279,36 +284,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
-  },
-  infoCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.light.text.primary,
-    marginBottom: 16,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  infoIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  infoText: {
-    fontSize: 15,
-    color: COLORS.light.text.secondary,
-    flex: 1,
   },
 
   // Connecté
@@ -362,75 +337,9 @@ const styles = StyleSheet.create({
     color: COLORS.light.text.secondary,
   },
   connectedBadge: {
-    width: 32,
-    height: 32,
     borderRadius: 16,
-    backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  connectedBadgeText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
-  // 🧪 Bouton de test
-  testButton: {
-    backgroundColor: '#FF9500',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  testButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-
-  // Options
-  optionsContainer: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    overflow: 'hidden',
-  },
-  optionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.light.border,
-  },
-  optionIcon: {
-    fontSize: 24,
-    marginRight: 16,
-  },
-  optionText: {
-    flex: 1,
-    fontSize: 16,
-    color: COLORS.light.text.primary,
-  },
-  optionArrow: {
-    fontSize: 24,
-    color: COLORS.light.text.secondary,
-  },
-
-  // Déconnexion
-  logoutButton: {
-    marginTop: 10,
-    alignItems: 'flex-end',
-  },
-  logoutButtonText: {
-    color: 'red',
-    fontSize: 16,
-    fontWeight: '600',
   },
 
   // GitHub Star
@@ -454,12 +363,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#57606a',
     fontWeight: '500',
-  },
-
-  // Version
-  version: {
-    textAlign: 'left',
-    color: COLORS.light.text.secondary,
-    fontSize: 12,
   },
 });

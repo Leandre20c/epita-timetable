@@ -2,39 +2,37 @@
 
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
+import { CustomAlert } from '../components/CustomAlert';
 import { AuthService } from '../services/AuthService';
 
 export default function LoginScreen() {
   const webViewRef = useRef<WebView>(null);
   const [authUrl, setAuthUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    // Génère l'URL d'authentification au chargement
     AuthService.getAuthUrl().then(setAuthUrl);
   }, []);
 
-  /**
-   * Intercepte les changements d'URL dans la WebView
-   */
   const handleNavigationStateChange = async (navState: any) => {
     const { url } = navState;
     
     console.log('📍 Navigation:', url);
 
-    // Si on arrive sur le redirect URI avec un token
     if (url.includes('zeus.ionis-it.com/officeConnect/') && url.includes('access_token=')) {
       
-      if (isProcessing) return; // Évite les doublons
+      if (isProcessing) return;
       setIsProcessing(true);
 
       console.log('🎯 Token détecté dans l\'URL !');
 
       try {
-        // Extrait le token
         const officeToken = AuthService.extractAccessTokenFromUrl(url);
 
         if (!officeToken) {
@@ -43,24 +41,20 @@ export default function LoginScreen() {
 
         console.log('✅ Token Office365 extrait');
 
-        // Login sur l'API EPITA
         const epitaJwt = await AuthService.loginToEpitaAPI(officeToken);
 
         console.log('✅ JWT EPITA obtenu');
 
-        // Sauvegarde
         await AuthService.saveTokens(officeToken, epitaJwt);
 
         console.log('✅✅ Connexion réussie !');
 
-        // Redirige vers l'app
-        Alert.alert('✅ Connexion réussie !', '', [
-          { text: 'OK', onPress: () => router.replace('/(tabs)') },
-        ]);
+        setShowSuccessAlert(true);
 
       } catch (error: any) {
         console.error('❌ Erreur:', error);
-        Alert.alert('❌ Erreur', error.message);
+        setErrorMessage(error.message || 'Une erreur est survenue');
+        setShowErrorAlert(true);
         setIsProcessing(false);
       }
     }
@@ -83,7 +77,6 @@ export default function LoginScreen() {
         onLoadStart={() => console.log('🔄 Chargement...')}
         onLoadEnd={() => console.log('✅ Chargé')}
         style={styles.webView}
-        // Important pour Office365
         userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
         sharedCookiesEnabled={true}
         thirdPartyCookiesEnabled={true}
@@ -94,6 +87,30 @@ export default function LoginScreen() {
           <ActivityIndicator size="large" color="white" />
         </View>
       )}
+
+      {/* Alert de succès */}
+      <CustomAlert
+        visible={showSuccessAlert}
+        title="Connexion réussie !"
+        message="Vous pouvez désormais choisir un groupe."
+        onConfirm={() => {
+          setShowSuccessAlert(false);
+          router.replace('/(tabs)/profile');
+        }}
+        confirmText="Continuer"
+      />
+
+      {/* Alert d'erreur */}
+      <CustomAlert
+        visible={showErrorAlert}
+        title="Erreur"
+        message={errorMessage}
+        onConfirm={() => {
+          setShowErrorAlert(false);
+        }}
+        confirmText="Réessayer"
+        type="error"
+      />
     </SafeAreaView>
   );
 }

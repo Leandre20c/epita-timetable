@@ -224,11 +224,10 @@ export const screenStyles = StyleSheet.create({
 
   // --- HEADERS (JOUR) ---
   dayHeader: {
-    paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.lg,
     backgroundColor: COLORS.light.cardBackground, // Blanc
+    borderTopWidth: 0,
     borderBottomWidth: 1,
-    paddingTop: 55,
     borderBottomColor: COLORS.light.border,
     alignItems: 'center',
     elevation: 5,
