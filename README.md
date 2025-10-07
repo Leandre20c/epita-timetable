@@ -11,6 +11,32 @@
   [![Downloads](https://img.shields.io/github/downloads/Leandre20c/epita-timetable/total.svg?color=blue)](https://github.com/Leandre20c/epita-timetable/releases)
 </div>
 
+## 📚 Sommaire
+
+- **Pour les utilisateurs**
+  - [Aperçu](#-aperçu)
+  - ⭐ [Installation](#-installation)
+  - [Guide d'utilisation](#-guide-dutilisation)
+  - [Changelog](#-changelog)
+
+
+- **Technique** -- Developpeurs
+  - [Stack technique](#️-pour-les-développeurs)
+  - [Fonctionnement avec Zeus](#-fonctionnement-avec-zeus)
+  - [Migration vers Auriga](#-zeus-et-auriga)
+
+
+- **Communauté**
+  - [Signaler un bug](#-signaler-un-bug)
+  - [Demandes de fonctionnalités](#-demandes-de-fonctionnalités)
+  - [Support](#-support)
+
+
+- **Informations**
+  - [Licence](#-licence)
+  - [Remerciements](#-remerciements)
+
+---
 
 ## 📱 Aperçu
 
@@ -52,17 +78,6 @@ EpiTime permet aux étudiants d'EPITA de :
 3. Selectionnez un groupe
 4. L'emploi du temps se synchronise automatiquement
 5. Naviguez entre les différentes vues (jour/semaine/profil)
-
-## 🛠️ Pour les développeurs
-
-### Stack technique
-- **Framework** : React Native 0.81.4 avec Expo SDK 54
-- **Navigation** : Expo Router 6.0.7
-- **UI** : React Native avec composants natifs
-- **État** : React Hooks + Context API
-- **API** : Swagger Zeus
-- **Build** : EAS Build
-- **Languages** : TypeScript
 
 ### Installation du projet
 
@@ -120,6 +135,131 @@ npx expo start --go
 - 🔄 Gestion de notifications
 - 🔄 Version iOS
 
+---
+# Technique
+
+## 🛠️ Pour les développeurs
+
+### Stack technique
+- **Framework** : React Native 0.81.4 avec Expo SDK 54
+- **Navigation** : Expo Router 6.0.7
+- **UI** : React Native avec composants natifs
+- **État** : React Hooks + Context API
+- **API** : [Swagger Zeus](https://zeus.ionis-it.com/swagger/index.html)
+- **Build** : EAS Build
+- **Languages** : TypeScript
+- 
+## 🔧 Fonctionnement avec Zeus
+
+Documentation officielle de l'API - [Swagger Zeus](https://zeus.ionis-it.com/swagger/index.html)
+
+### Architecture de récupération des données
+
+#### 1. Authentification en deux étapes
+
+```bash
+Utilisateur → Office365 (OAuth 2.0) → Token Office365 → Token Office365 → Zeus API → JWT EPITA
+```
+**Endpoint d'authentification** :
+```
+POST /api/User/OfficeLogin
+Body: { "accessToken": "token_office365" }
+Réponse: "jwt_epita_token"
+```
+
+#### 2. Récupération de la hiérarchie des groupes
+
+Avant d'accéder à l'emploi du temps, l'utilisateur doit sélectionner son groupe :
+```
+GET /api/group/hierarchy
+Authorization: Bearer {JWT_EPITA}
+```
+**Structure de réponse** :
+```json
+[
+  {
+    "id": 1,
+    "name": "EPITA",
+    "children": [
+      {
+        "id": 100,
+        "name": "ING1",
+        "children": [
+          {
+            "id": 1001,
+            "name": "ING1 - Groupe 1",
+            "path": "epita/ing1/groupe_1"
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+L'utilisateur choisi ensuite son groupe
+
+#### 3. Téléchargement de l'emploi du temps
+Une fois le groupe sélectionné :
+```bash
+GET /api/group/{groupId}/ics?startDate=2025-01-01
+Authorization: Bearer {JWT_EPITA}
+Accept: text/calendar
+```
+En retour, un fichier [ICS](https://fr.wikipedia.org/wiki/ICalendar) contenant les cours du groupe.
+
+### Flux complet :
+
+  1. Connexion Office365 → Token Office365
+  2. Échange avec Zeus → JWT EPITA
+  3. Récupération hiérarchie → Arbre des groupes
+  4. Sélection du groupe → Sauvegardé localement
+  5. Téléchargement calendrier → Fichier ICS
+  6. Parsing et affichage → Emploi du temps
+
+## 🔄 Zeus et Auriga
+
+Nous avons connaissance de la volonté d'EPITA de migrer vers [Auriga](https://auriga.epita.fr/).
+
+**Pas d'inquiétude !** Une solution a été trouvée pour récupérer les cours depuis Auriga.
+
+### 🔄 Comment ça va fonctionner ?
+
+#### L'authentification reste identique
+Vous continuerez à vous connecter avec votre compte Office365, exactement comme aujourd'hui.
+
+#### L'API Auriga simplifie tout
+
+**Actuellement avec Zeus** :
+- Vous devez sélectionner votre groupe manuellement
+- L'application télécharge un fichier ICS qu'elle doit parser
+
+**Bientôt avec Auriga** :
+- Le système détecte automatiquement votre groupe
+- L'application reçoit directement votre emploi du temps au format JSON
+- Plus besoin de sélectionner votre classe à chaque fois !
+
+#### Migration transparente
+
+L'application détectera automatiquement quelle API est disponible (Zeus ou Auriga) et s'adaptera sans intervention de votre part. Pendant la transition, les deux systèmes coexisteront.
+
+---
+
+### 📝 Pour les développeurs
+
+**Endpoint principal Auriga** :
+
+```bash
+GET https://auriga.epita.fr/api/plannings/me
+```
+
+**Modifications prévues** :
+- Nouveau service `AurigaService.ts` pour gérer l'API Auriga
+- Adaptateur pour convertir les données Auriga vers le format actuel
+- Détection automatique de l'API disponible
+- Suppression du système de sélection de groupe (automatique avec Auriga)
+
+La migration sera effectuée dès que les emplois du temps seront disponibles sur Auriga.
+
 ## 🐛 Signaler un bug
 
 Si vous rencontrez un problème :
@@ -167,8 +307,9 @@ Pour proposer une nouvelle fonctionnalité :
 ## 📞 Support
 
 - **Issues GitHub** : Pour bugs et fonctionnalités
-- **Email** : @leandre.vincent@epita.fr
+- **Email** : leandre.vincent@epita.fr
 
+---
 ## 📄 Licence
 
 Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
