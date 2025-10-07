@@ -1,18 +1,24 @@
-# EpiTime
+<div align="center">
+  <img width="192" height="192" alt="notification-icon" src="https://github.com/user-attachments/assets/ea01ea5c-6bff-4b64-8019-8dee7021647d" />
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/Leandre20c/epita-timetable/releases)
-[![Platform](https://img.shields.io/badge/platform-Android-green.svg)](https://github.com/Leandre20c/epita-timetable)
-[![License](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/Leandre20c/epita-timetable/total.svg)](https://github.com/Leandre20c/epita-timetable/releases)
+  # EpiTime
+  
+  **Application mobile pour consulter l'emploi du temps EPITA**
+  
+  [![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](https://github.com/Leandre20c/epita-timetable/releases)
+  [![Platform](https://img.shields.io/badge/platform-Android-blue.svg)](https://github.com/Leandre20c/epita-timetable)
+  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+  [![Downloads](https://img.shields.io/github/downloads/Leandre20c/epita-timetable/total.svg?color=blue)](https://github.com/Leandre20c/epita-timetable/releases)
+</div>
 
-Application mobile pour consulter l'emploi du temps EPITA de manière intuitive et moderne.
 
 ## 📱 Aperçu
 
 EpiTime permet aux étudiants d'EPITA de :
-- Consulter leur emploi du temps en temps réel
-- Naviguer par jour, semaine ou mois
-- Possibilité de choisir sa classe
+- <img src="https://api.iconify.design/lucide:clock.svg?color=%233498DB" width="20"/> Consulter leur emploi du temps synchronisé avec [Zeus](https://zeus.ionis-it.com/home)
+- <img src="https://api.iconify.design/lucide:calendar-days.svg?color=%233498DB" width="20"/> Naviguer par jour ou par semaine
+- <img src="https://api.iconify.design/lucide:graduation-cap.svg?color=%233498DB" width="20"/> Possibilité de choisir sa classe
+- <img src="https://api.iconify.design/lucide:save.svg?color=%233498DB" width="20"/> Enregistrement dans le cache
 
 ### Captures d'écran
 
@@ -33,7 +39,6 @@ EpiTime permet aux étudiants d'EPITA de :
 #### iOS
 *Version iOS en développement*
 
-
 ### Configuration requise
 - Android 5.0+ (API niveau 21)
 - Connexion internet pour la synchronisation
@@ -43,8 +48,10 @@ EpiTime permet aux étudiants d'EPITA de :
 
 ### Première utilisation
 1. Lancez l'application
-2. L'emploi du temps se synchronise automatiquement
-3. Naviguez entre les différentes vues (jour/semaine/mois)
+2. Connectez vous à votre compte Office360 dans la section Profil
+3. Selectionnez un groupe
+4. L'emploi du temps se synchronise automatiquement
+5. Naviguez entre les différentes vues (jour/semaine/profil)
 
 ## 🛠️ Pour les développeurs
 
@@ -53,6 +60,7 @@ EpiTime permet aux étudiants d'EPITA de :
 - **Navigation** : Expo Router 6.0.7
 - **UI** : React Native avec composants natifs
 - **État** : React Hooks + Context API
+- **API** : Swagger Zeus
 - **Build** : EAS Build
 - **Languages** : TypeScript
 
@@ -99,10 +107,13 @@ npx expo start --go
 - ✅ Choisir sa classe
 - ✅ Meilleure pop-up pour l'affichage d'un cours
 - ✅ Tab Profil -> Connection et choisir sa classe
+### Version 1.2.2 (à venir)
+- ✅ Mode hors-ligne (cache)
+- ✅ Optimisations des fichiers, composants pour éviter la répétition
+
 
 ### Prochaines versions - Ordre d'importance
 - 🔄 Restructuration de l'app par modules / Optimisations
-- 🔄 Cache hors ligne intelligent
 - 🔄 Widget Android
 - 🔄 Visualisation par Mois
 - 🔄 Mode sombre
