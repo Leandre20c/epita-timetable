@@ -51,7 +51,7 @@ EpiTime permet aux étudiants d'EPITA de :
 <img width="265" height="600" alt="image" src="https://github.com/user-attachments/assets/a9d9daaf-b037-498f-96f5-adf3295c25ab" />
 
 
-## 🚀 Installation
+## ⭐ Installation
 
 ### Pour les utilisateurs
 
@@ -64,6 +64,7 @@ EpiTime permet aux étudiants d'EPITA de :
 
 #### iOS
 *Version iOS en développement*
+Une version iOS est possible, mais nécessite une license developpeur Apple (100€/An)
 
 ### Configuration requise
 - Android 5.0+ (API niveau 21)
@@ -76,30 +77,10 @@ EpiTime permet aux étudiants d'EPITA de :
 1. Lancez l'application
 2. Connectez vous à votre compte Office360 dans la section Profil
 3. Selectionnez un groupe
-4. L'emploi du temps se synchronise automatiquement
+4. L'emploi du temps se synchronise et s'enregistre automatiquement
 5. Naviguez entre les différentes vues (jour/semaine/profil)
+6. Cliquez sur un cours pour y voir les détails, et ajuster sa couleur selon vos préférences
 
-### Installation du projet
-
-```bash
-# Cloner le repository
-git clone https://github.com/votre-username/epita-timetable.git
-cd epita-timetable
-
-# Installer les dépendances
-npm install
-
-# Lancer en développement
-npx expo start --go
-```
-
-### Contribuer
-
-1. Forkez le projet
-2. Créez une branche feature (`git checkout -b feature/nouvelle-fonctionnalite`)
-3. Committez vos changements (`git commit -m 'Ajout nouvelle fonctionnalité'`)
-4. Pushez vers la branche (`git push origin feature/nouvelle-fonctionnalite`)
-5. Ouvrez une Pull Request
 
 ## 📋 Changelog
 
@@ -117,12 +98,12 @@ npx expo start --go
 - ✅ Couleurs logiques
 - ✅ Création d'un logo
 - ✅ Changement de nom -> EpiTime
-### Version 1.2.0 (Actuelle)
+### Version 1.2.0
 - ✅ Scroll plus tolérant
 - ✅ Choisir sa classe
 - ✅ Meilleure pop-up pour l'affichage d'un cours
 - ✅ Tab Profil -> Connection et choisir sa classe
-### Version 1.2.2 (à venir)
+### Version 1.2.2 (Actuelle)
 - ✅ Mode hors-ligne (cache)
 - ✅ Optimisations des fichiers, composants pour éviter la répétition
 
@@ -131,6 +112,7 @@ npx expo start --go
 - 🔄 Restructuration de l'app par modules / Optimisations
 - 🔄 Widget Android
 - 🔄 Visualisation par Mois
+- 🔄 Notifications en cas de mise à jour
 - 🔄 Mode sombre
 - 🔄 Gestion de notifications
 - 🔄 Version iOS
@@ -148,7 +130,29 @@ npx expo start --go
 - **API** : [Swagger Zeus](https://zeus.ionis-it.com/swagger/index.html)
 - **Build** : EAS Build
 - **Languages** : TypeScript
-- 
+
+### Installation du projet
+
+```bash
+# Cloner le repository
+git clone https://github.com/Leandre20c/epita-timetable.git
+cd epita-timetable
+
+# Installer les dépendances
+npm install
+
+# Lancer en développement
+npx expo start --go
+```
+
+### Contribuer
+
+1. Forkez le projet
+2. Créez une branche feature (`git checkout -b feature/nouvelle-fonctionnalite`)
+3. Committez vos changements (`git commit -m 'Ajout nouvelle fonctionnalité'`)
+4. Pushez vers la branche (`git push origin feature/nouvelle-fonctionnalite`)
+5. Ouvrez une Pull Request
+
 ## 🔧 Fonctionnement avec Zeus
 
 Documentation officielle de l'API - [Swagger Zeus](https://zeus.ionis-it.com/swagger/index.html)
@@ -160,6 +164,13 @@ Documentation officielle de l'API - [Swagger Zeus](https://zeus.ionis-it.com/swa
 ```bash
 Utilisateur → Office365 (OAuth 2.0) → Token Office365 → Token Office365 → Zeus API → JWT EPITA
 ```
+Le JWT permet d'avoir accès à toutes les requêtes de zeus-ionis
+
+**Endpoint principal Auriga** :
+```
+GET https://auriga.epita.fr/api/plannings/me
+```
+
 **Endpoint d'authentification** :
 ```
 POST /api/User/OfficeLogin
@@ -209,12 +220,12 @@ En retour, un fichier [ICS](https://fr.wikipedia.org/wiki/ICalendar) contenant l
 
 ### Flux complet :
 
-  1. Connexion Office365 → Token Office365
-  2. Échange avec Zeus → JWT EPITA
-  3. Récupération hiérarchie → Arbre des groupes
-  4. Sélection du groupe → Sauvegardé localement
-  5. Téléchargement calendrier → Fichier ICS
-  6. Parsing et affichage → Emploi du temps
+1. Connexion Office365 → Token Office365
+2. Échange avec Zeus → JWT EPITA
+3. Récupération hiérarchie → Arbre des groupes
+4. Sélection du groupe → Sauvegardé localement
+5. Téléchargement calendrier → Fichier ICS
+6. Parsing et affichage → Emploi du temps
 
 ## 🔄 Zeus et Auriga
 
@@ -242,23 +253,10 @@ Vous continuerez à vous connecter avec votre compte Office365, exactement comme
 
 L'application détectera automatiquement quelle API est disponible (Zeus ou Auriga) et s'adaptera sans intervention de votre part. Pendant la transition, les deux systèmes coexisteront.
 
----
-
-### 📝 Pour les développeurs
-
-**Endpoint principal Auriga** :
-
-```bash
-GET https://auriga.epita.fr/api/plannings/me
-```
-
-**Modifications prévues** :
-- Nouveau service `AurigaService.ts` pour gérer l'API Auriga
-- Adaptateur pour convertir les données Auriga vers le format actuel
-- Détection automatique de l'API disponible
-- Suppression du système de sélection de groupe (automatique avec Auriga)
-
 La migration sera effectuée dès que les emplois du temps seront disponibles sur Auriga.
+
+---
+# Communautée
 
 ## 🐛 Signaler un bug
 
@@ -293,7 +291,7 @@ Si applicable
 **Environnement:**
 - Appareil : [Samsung Galaxy S21]
 - Version Android : [12]
-- Version app : [1.0.0]
+- Version app : [1.2.17]
 ```
 
 ## 💡 Demandes de fonctionnalités
@@ -312,7 +310,7 @@ Pour proposer une nouvelle fonctionnalité :
 ---
 ## 📄 Licence
 
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+Ce projet est sous licence MIT.
 
 ## 🙏 Remerciements
 
