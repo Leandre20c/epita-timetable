@@ -1,5 +1,12 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
 # dependencies
 node_modules/
 
